@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="'Formateur - ' + ${formateur.nom}">Détail Formateur</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="bi bi-person-badge"></i>
+            <span th:text="${formateur.nom + ' ' + formateur.prenom}"></span>
+        </h1>
+        <div>
+            <a th:href="@{/admin/formateurs}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+            <a th:href="@{/admin/formateurs/{id}/modifier(id=${formateur.id})}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations personnelles -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-person"></i> Informations personnelles
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Email</small>
+                        <div th:text="${formateur.email}"></div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Téléphone</small>
+                        <div th:text="${formateur.telephone ?: 'Non renseigné'}"></div>
+                    </div>
+                    <div>
+                        <small class="text-muted">Spécialité</small>
+                        <div>
+                            <span class="badge bg-info" th:if="${formateur.specialite}" 
+                                  th:text="${formateur.specialite.nom}"></span>
+                            <span class="text-muted" th:unless="${formateur.specialite}">Non définie</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cours enseignés -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-book"></i> Cours enseignés</span>
+                    <span class="badge bg-primary" th:text="${cours.size()} + ' cours'"></span>
+                </div>
+                <div class="card-body">
+                    <div th:if="${cours.empty}" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <p class="mt-2">Aucun cours assigné pour le moment</p>
+                    </div>
+                    
+                    <div th:unless="${cours.empty}" class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Titre</th>
+                                    <th>Heures</th>
+                                    <th>Groupes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="c : ${cours}">
+                                    <td>
+                                        <code th:text="${c.code}"></code>
+                                    </td>
+                                    <td>
+                                        <strong th:text="${c.titre}"></strong>
+                                        <br>
+                                        <small class="text-muted" th:text="${c.description}"></small>
+                                    </td>
+                                    <td th:text="${c.nombreHeures} + 'h'"></td>
+                                    <td>
+                                        <span th:each="g : ${c.groupes}" 
+                                              class="badge bg-secondary me-1" 
+                                              th:text="${g.nom}"></span>
+                                        <span th:if="${c.groupes.empty}" class="text-muted">Aucun</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/admin/cours/{id}(id=${c.id})}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

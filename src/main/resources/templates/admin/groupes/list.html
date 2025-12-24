@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Gestion des Groupes</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-diagram-3"></i> Gestion des Groupes</h1>
+        <a th:href="@{/admin/groupes/nouveau}" class="btn btn-secondary">
+            <i class="bi bi-plus-circle"></i> Nouveau Groupe
+        </a>
+    </div>
+
+    <!-- Liste des groupes -->
+    <div class="row">
+        <div th:each="groupe : ${groupes}" class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i>
+                        <span th:text="${groupe.nom}"></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Spécialité</small>
+                        <div>
+                            <span class="badge bg-info" th:if="${groupe.specialite}" 
+                                  th:text="${groupe.specialite.nom}"></span>
+                            <span class="text-muted" th:unless="${groupe.specialite}">Non définie</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Session pédagogique</small>
+                        <div>
+                            <span class="badge bg-primary" th:if="${groupe.sessionPedagogique}" 
+                                  th:text="${groupe.sessionPedagogique.anneeScolaire + ' - ' + groupe.sessionPedagogique.semestre}"></span>
+                            <span class="text-muted" th:unless="${groupe.sessionPedagogique}">Non définie</span>
+                        </div>
+                    </div>
+
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h4 class="mb-0" th:text="${groupe.etudiants.size()}">0</h4>
+                                <small class="text-muted">Étudiants</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2">
+                                <h4 class="mb-0" th:text="${groupe.cours.size()}">0</h4>
+                                <small class="text-muted">Cours</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a th:href="@{/admin/groupes/{id}(id=${groupe.id})}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Voir détails
+                        </a>
+                        <div class="btn-group">
+                            <a th:href="@{/admin/groupes/{id}/modifier(id=${groupe.id})}" 
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="#" 
+                               onclick="return confirmDelete(this)" 
+                               th:href="@{/admin/groupes/{id}/supprimer(id=${groupe.id})}" 
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${groupes.empty}" class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2">Aucun groupe enregistré</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

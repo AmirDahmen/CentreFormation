@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="${isEdit} ? 'Modifier une session' : 'Nouvelle session'">Formulaire session</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">
+                    <i class="bi bi-calendar-event-fill me-2 text-primary" th:if="${!isEdit}"></i>
+                    <i class="bi bi-pencil-fill me-2 text-warning" th:if="${isEdit}"></i>
+                    <span th:text="${isEdit} ? 'Modifier la session' : 'Nouvelle session pédagogique'"></span>
+                </h1>
+                <p class="text-muted mb-0">Configurez la session pédagogique</p>
+            </div>
+            <a th:href="@{/admin/sessions}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-calendar-event me-2"></i>Informations de la session
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="${isEdit} ? @{/admin/sessions/{id}/modifier(id=${sessionPedagogique.id})} : @{/admin/sessions/nouvelle}" 
+                          th:object="${sessionPedagogique}" method="post">
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="anneeScolaire" class="form-label fw-semibold">Année scolaire <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" id="anneeScolaire" th:field="*{anneeScolaire}" 
+                                       placeholder="Ex: 2024-2025" required>
+                                <div class="form-text">Format: AAAA-AAAA</div>
+                                <div th:if="${#fields.hasErrors('anneeScolaire')}" class="text-danger small mt-1" th:errors="*{anneeScolaire}"></div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="semestre" class="form-label fw-semibold">Semestre <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" id="semestre" th:field="*{semestre}" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="S1">Semestre 1</option>
+                                    <option value="S2">Semestre 2</option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('semestre')}" class="text-danger small mt-1" th:errors="*{semestre}"></div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="dateDebut" class="form-label fw-semibold">Date de début <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-lg" id="dateDebut" th:field="*{dateDebut}" required>
+                                <div th:if="${#fields.hasErrors('dateDebut')}" class="text-danger small mt-1" th:errors="*{dateDebut}"></div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="dateFin" class="form-label fw-semibold">Date de fin <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-lg" id="dateFin" th:field="*{dateFin}" required>
+                                <div th:if="${#fields.hasErrors('dateFin')}" class="text-danger small mt-1" th:errors="*{dateFin}"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-3 pt-4 mt-4 border-top">
+                            <a th:href="@{/admin/sessions}" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-x-lg me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-check-lg me-2"></i>
+                                <span th:text="${isEdit} ? 'Enregistrer' : 'Créer la session'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

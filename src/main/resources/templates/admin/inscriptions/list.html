@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Gestion des Inscriptions</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-clipboard-check"></i> Gestion des Inscriptions</h1>
+        <a th:href="@{/admin/inscriptions/nouvelle}" class="btn btn-danger">
+            <i class="bi bi-plus-circle"></i> Nouvelle Inscription
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/admin/inscriptions}" method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Étudiant</label>
+                    <select name="etudiantId" class="form-select">
+                        <option value="">Tous les étudiants</option>
+                        <option th:each="e : ${etudiants}" 
+                                th:value="${e.id}" 
+                                th:text="${e.nom + ' ' + e.prenom}"
+                                th:selected="${etudiantId != null && etudiantId == e.id}">
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cours</label>
+                    <select name="coursId" class="form-select">
+                        <option value="">Tous les cours</option>
+                        <option th:each="c : ${allCours}" 
+                                th:value="${c.id}" 
+                                th:text="${c.code + ' - ' + c.titre}"
+                                th:selected="${coursId != null && coursId == c.id}">
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Statut</label>
+                    <select name="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="ACTIVE" th:selected="${statut == 'ACTIVE'}">Active</option>
+                        <option value="ANNULEE" th:selected="${statut == 'ANNULEE'}">Annulée</option>
+                        <option value="TERMINEE" th:selected="${statut == 'TERMINEE'}">Terminée</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des inscriptions -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-list-ul"></i> Liste des Inscriptions
+            <span class="badge bg-secondary float-end" th:text="${inscriptions.totalElements + ' inscription(s)'}"></span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Étudiant</th>
+                            <th>Cours</th>
+                            <th>Date inscription</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${inscriptions.empty}">
+                            <td colspan="5" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Aucune inscription trouvée
+                            </td>
+                        </tr>
+                        <tr th:each="inscription : ${inscriptions}">
+                            <td>
+                                <a th:href="@{/admin/etudiants/{id}(id=${inscription.etudiant.id})}"
+                                   th:text="${inscription.etudiant.nom + ' ' + inscription.etudiant.prenom}"></a>
+                                <br>
+                                <small class="text-muted" th:text="'Matricule: ' + ${inscription.etudiant.matricule}"></small>
+                            </td>
+                            <td>
+                                <strong th:text="${inscription.cours.code}"></strong>
+                                <br>
+                                <small th:text="${inscription.cours.titre}"></small>
+                            </td>
+                            <td th:text="${#temporals.format(inscription.dateInscription, 'dd/MM/yyyy')}"></td>
+                            <td>
+                                <span th:if="${inscription.statut.name() == 'ACTIVE'}" class="badge bg-success">Active</span>
+                                <span th:if="${inscription.statut.name() == 'ANNULEE'}" class="badge bg-danger">Annulée</span>
+                                <span th:if="${inscription.statut.name() == 'TERMINEE'}" class="badge bg-secondary">Terminée</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a th:if="${inscription.statut.name() == 'ACTIVE'}"
+                                       href="#" 
+                                       onclick="return confirm('Voulez-vous annuler cette inscription ?')"
+                                       th:href="@{/admin/inscriptions/{id}/annuler(id=${inscription.id})}" 
+                                       class="btn btn-sm btn-outline-warning" 
+                                       title="Annuler">
+                                        <i class="bi bi-x-circle"></i>
+                                    </a>
+                                    <a href="#" 
+                                       onclick="return confirmDelete(this)" 
+                                       th:href="@{/admin/inscriptions/{id}/supprimer(id=${inscription.id})}" 
+                                       class="btn btn-sm btn-outline-danger" 
+                                       title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav th:if="${inscriptions.totalPages > 1}">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item" th:classappend="${inscriptions.first} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/inscriptions(page=${inscriptions.number - 1}, size=${inscriptions.size}, etudiantId=${etudiantId}, coursId=${coursId}, statut=${statut})}">
+                            Précédent
+                        </a>
+                    </li>
+                    
+                    <li class="page-item" 
+                        th:each="i : ${#numbers.sequence(0, inscriptions.totalPages - 1)}"
+                        th:classappend="${i == inscriptions.number} ? 'active'">
+                        <a class="page-link" th:href="@{/admin/inscriptions(page=${i}, size=${inscriptions.size}, etudiantId=${etudiantId}, coursId=${coursId}, statut=${statut})}" 
+                           th:text="${i + 1}">1</a>
+                    </li>
+                    
+                    <li class="page-item" th:classappend="${inscriptions.last} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/inscriptions(page=${inscriptions.number + 1}, size=${inscriptions.size}, etudiantId=${etudiantId}, coursId=${coursId}, statut=${statut})}">
+                            Suivant
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+</body>
+</html>

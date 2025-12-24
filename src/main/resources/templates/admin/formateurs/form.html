@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="${formateur.id != null} ? 'Modifier Formateur' : 'Nouveau Formateur'">Formateur</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="bi bi-person-badge"></i>
+            <span th:text="${formateur.id != null} ? 'Modifier Formateur' : 'Nouveau Formateur'"></span>
+        </h1>
+        <a th:href="@{/admin/formateurs}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="${formateur.id != null} ? @{/admin/formateurs/{id}/modifier(id=${formateur.id})} : @{/admin/formateurs/nouveau}" 
+                          th:object="${formateur}" 
+                          method="post" 
+                          class="needs-validation" 
+                          novalidate>
+                        
+                        <!-- Informations personnelles -->
+                        <h5 class="mb-3"><i class="bi bi-person"></i> Informations personnelles</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nom" class="form-label">Nom *</label>
+                                <input type="text" id="nom" th:field="*{nom}" 
+                                       class="form-control" required>
+                                <div class="invalid-feedback">Le nom est requis</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="prenom" class="form-label">Prénom *</label>
+                                <input type="text" id="prenom" th:field="*{prenom}" 
+                                       class="form-control" required>
+                                <div class="invalid-feedback">Le prénom est requis</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" id="email" th:field="*{email}" 
+                                   class="form-control" required>
+                            <div class="invalid-feedback">Un email valide est requis</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="telephone" class="form-label">Téléphone</label>
+                            <input type="tel" id="telephone" th:field="*{telephone}" 
+                                   class="form-control">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Informations professionnelles -->
+                        <h5 class="mb-3"><i class="bi bi-briefcase"></i> Informations professionnelles</h5>
+
+                        <div class="mb-3">
+                            <label for="specialiteId" class="form-label">Spécialité *</label>
+                            <select id="specialiteId" th:field="*{specialite.id}" 
+                                    class="form-select" required>
+                                <option value="">Sélectionner une spécialité</option>
+                                <option th:each="spec : ${specialites}" 
+                                        th:value="${spec.id}" 
+                                        th:text="${spec.nom}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback">La spécialité est requise</div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between">
+                            <a th:href="@{/admin/formateurs}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i>
+                                <span th:text="${formateur.id != null} ? 'Enregistrer' : 'Créer'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Gestion des Sessions Pédagogiques</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-calendar3"></i> Gestion des Sessions Pédagogiques</h1>
+        <a th:href="@{/admin/sessions/nouvelle}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nouvelle Session
+        </a>
+    </div>
+
+    <!-- Liste des sessions -->
+    <div class="row" th:if="${sessions != null}">
+        <div th:each="s : ${sessions.content}" class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-calendar-event"></i>
+                        <span th:text="${s.anneeScolaire}"></span>
+                    </h5>
+                    <h6 class="card-subtitle mb-3 text-muted" th:text="${s.semestre}"></h6>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Du</small>
+                        <strong th:if="${s.dateDebut != null}" th:text="${#temporals.format(s.dateDebut, 'dd/MM/yyyy')}"></strong>
+                        <strong th:if="${s.dateDebut == null}">N/A</strong>
+                        <small class="text-muted">au</small>
+                        <strong th:if="${s.dateFin != null}" th:text="${#temporals.format(s.dateFin, 'dd/MM/yyyy')}"></strong>
+                        <strong th:if="${s.dateFin == null}">N/A</strong>
+                    </div>
+
+                    <div class="btn-group w-100">
+                        <a th:href="@{/admin/sessions/{id}/modifier(id=${s.id})}" 
+                           class="btn btn-sm btn-outline-secondary" 
+                           title="Modifier">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        <a href="#" 
+                           onclick="return confirmDelete(this)" 
+                           th:href="@{/admin/sessions/{id}/supprimer(id=${s.id})}" 
+                           class="btn btn-sm btn-outline-danger" 
+                           title="Supprimer">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${sessions.content.empty}" class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2">Aucune session pédagogique enregistrée</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

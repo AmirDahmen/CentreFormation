@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="${isEdit} ? 'Modifier un étudiant' : 'Nouvel étudiant'">Formulaire étudiant</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">
+                    <i class="bi bi-person-plus-fill me-2 text-primary" th:if="${!isEdit}"></i>
+                    <i class="bi bi-pencil-fill me-2 text-warning" th:if="${isEdit}"></i>
+                    <span th:text="${isEdit} ? 'Modifier l\'étudiant' : 'Nouvel étudiant'"></span>
+                </h1>
+                <p class="text-muted mb-0">Remplissez les informations de l'étudiant</p>
+            </div>
+            <a th:href="@{/admin/etudiants}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-person-vcard me-2"></i>
+                        Informations de l'étudiant
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="${isEdit} ? @{/admin/etudiants/{id}/modifier(id=${etudiant.id})} : @{/admin/etudiants/nouveau}" 
+                          method="post" 
+                          th:object="${etudiant}"
+                          class="needs-validation" novalidate>
+                        
+                        <!-- Identifiants -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="bi bi-credit-card me-2"></i>Identifiants
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="matricule" class="form-label fw-semibold">
+                                        Matricule <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" id="matricule" 
+                                           th:field="*{matricule}" required
+                                           placeholder="Ex: ETU2025001">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('matricule')}" 
+                                         th:errors="*{matricule}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label fw-semibold">
+                                        Email <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                        <input type="email" class="form-control" id="email" 
+                                               th:field="*{email}" required
+                                               placeholder="etudiant@example.com">
+                                    </div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" 
+                                         th:errors="*{email}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- État civil -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-success mb-3">
+                                <i class="bi bi-person-badge me-2"></i>État civil
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="nom" class="form-label fw-semibold">
+                                        Nom <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" id="nom" 
+                                           th:field="*{nom}" required
+                                           placeholder="Nom de famille">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('nom')}" 
+                                         th:errors="*{nom}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="prenom" class="form-label fw-semibold">
+                                        Prénom <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" id="prenom" 
+                                           th:field="*{prenom}" required
+                                           placeholder="Prénom">
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('prenom')}" 
+                                         th:errors="*{prenom}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informations académiques -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-info mb-3">
+                                <i class="bi bi-mortarboard me-2"></i>Informations académiques
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="dateInscription" class="form-label fw-semibold">
+                                        Date d'inscription
+                                    </label>
+                                    <input type="date" class="form-control form-control-lg" id="dateInscription" 
+                                           th:field="*{dateInscription}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="specialite" class="form-label fw-semibold">
+                                        Spécialité
+                                    </label>
+                                    <select class="form-select form-select-lg" id="specialite" th:field="*{specialite.id}">
+                                        <option value="">-- Sélectionner une spécialité --</option>
+                                        <option th:each="spec : ${specialites}" 
+                                                th:value="${spec.id}" 
+                                                th:text="${spec.nom}">
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Groupes -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-warning mb-3">
+                                <i class="bi bi-people me-2"></i>Affectation aux groupes
+                            </h6>
+                            <div class="card bg-light border-0">
+                                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                    <div th:if="${groupes.isEmpty()}" class="text-center text-muted py-3">
+                                        <i class="bi bi-info-circle fs-3 mb-2"></i>
+                                        <p class="mb-0">Aucun groupe disponible</p>
+                                    </div>
+                                    <div th:each="groupe : ${groupes}" class="form-check mb-3 p-3 bg-white rounded">
+                                        <input class="form-check-input" type="checkbox" 
+                                               th:id="'groupe-' + ${groupe.id}"
+                                               name="groupeIds" 
+                                               th:value="${groupe.id}"
+                                               th:checked="${selectedGroupes != null && selectedGroupes.contains(groupe.id)}">
+                                        <label class="form-check-label ms-2" th:for="'groupe-' + ${groupe.id}">
+                                            <strong th:text="${groupe.nom}"></strong>
+                                            <span th:if="${groupe.code}" class="text-muted ms-2">
+                                                (<span th:text="${groupe.code}"></span>)
+                                            </span>
+                                            <span th:if="${groupe.specialite}" class="badge bg-info ms-2" 
+                                                  th:text="${groupe.specialite.nom}"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-3 justify-content-end mt-5 pt-4 border-top">
+                            <a th:href="@{/admin/etudiants}" class="btn btn-lg btn-outline-secondary px-4">
+                                <i class="bi bi-x-circle me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-lg btn-primary px-5">
+                                <i class="bi bi-check-circle me-2"></i>
+                                <span th:text="${isEdit} ? 'Enregistrer les modifications' : 'Créer l\'étudiant'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

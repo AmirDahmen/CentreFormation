@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Nouvelle Inscription</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="bi bi-clipboard-plus"></i> Nouvelle Inscription
+        </h1>
+        <a th:href="@{/admin/inscriptions}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{/admin/inscriptions/nouvelle}" 
+                          method="post" 
+                          class="needs-validation" 
+                          novalidate>
+                        
+                        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations de l'inscription</h5>
+                        
+                        <div class="mb-3">
+                            <label for="etudiantId" class="form-label">Étudiant *</label>
+                            <select id="etudiantId" name="etudiantId" class="form-select" required>
+                                <option value="">Sélectionner un étudiant</option>
+                                <option th:each="e : ${etudiants}" 
+                                        th:value="${e.id}" 
+                                        th:text="${e.matricule + ' - ' + e.nom + ' ' + e.prenom}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback">L'étudiant est requis</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="coursId" class="form-label">Cours *</label>
+                            <select id="coursId" name="coursId" class="form-select" required>
+                                <option value="">Sélectionner un cours</option>
+                                <option th:each="c : ${cours}" 
+                                        th:value="${c.id}" 
+                                        th:text="${c.code + ' - ' + c.titre}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback">Le cours est requis</div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Important :</strong> Une fois créée, l'inscription sera automatiquement en statut "Active". 
+                            La date d'inscription sera la date du jour.
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between">
+                            <a th:href="@{/admin/inscriptions}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-check-circle"></i> Créer l'inscription
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

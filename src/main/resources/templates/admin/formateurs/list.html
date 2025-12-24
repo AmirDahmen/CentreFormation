@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Gestion des Formateurs</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-person-badge"></i> Gestion des Formateurs</h1>
+        <a th:href="@{/admin/formateurs/nouveau}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nouveau Formateur
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/admin/formateurs}" method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Recherche</label>
+                    <input type="text" name="search" th:value="${search}" 
+                           class="form-control" placeholder="Nom, prénom, email...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Spécialité</label>
+                    <select name="specialiteId" class="form-select">
+                        <option value="">Toutes les spécialités</option>
+                        <option th:each="spec : ${specialites}" 
+                                th:value="${spec.id}" 
+                                th:text="${spec.nom}"
+                                th:selected="${specialiteId != null && specialiteId == spec.id}">
+                        </option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des formateurs -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-list-ul"></i> Liste des Formateurs
+            <span class="badge bg-secondary float-end" th:text="${formateurs.totalElements + ' formateur(s)'}"></span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Spécialité</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${formateurs.empty}">
+                            <td colspan="6" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Aucun formateur trouvé
+                            </td>
+                        </tr>
+                        <tr th:each="formateur : ${formateurs}" 
+                            th:onclick="'window.location.href=\'' + @{/admin/formateurs/{id}(id=${formateur.id})} + '\''" 
+                            style="cursor: pointer;">
+                            <td>
+                                <strong th:text="${formateur.nom + ' ' + formateur.prenom}"></strong>
+                            </td>
+                            <td th:text="${formateur.email}"></td>
+                            <td th:text="${formateur.telephone}"></td>
+                            <td>
+                                <span class="badge bg-info" th:if="${formateur.specialite}" 
+                                      th:text="${formateur.specialite.nom}"></span>
+                                <span class="text-muted" th:unless="${formateur.specialite}">Non définie</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">Actif</span>
+                            </td>
+                            <td class="text-end" onclick="event.stopPropagation()">
+                                <div class="btn-group" role="group">
+                                    <a th:href="@{/admin/formateurs/{id}(id=${formateur.id})}" 
+                                       class="btn btn-sm btn-outline-primary" title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:href="@{/admin/formateurs/{id}/modifier(id=${formateur.id})}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/admin/formateurs/{id}/supprimer(id=${formateur.id})}" 
+                                          method="post" style="display:inline;"
+                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce formateur ?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav th:if="${formateurs.totalPages > 1}">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item" th:classappend="${formateurs.first} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/formateurs(page=${formateurs.number - 1}, size=${formateurs.size}, search=${search}, specialiteId=${specialiteId})}">
+                            Précédent
+                        </a>
+                    </li>
+                    
+                    <li class="page-item" 
+                        th:each="i : ${#numbers.sequence(0, formateurs.totalPages - 1)}"
+                        th:classappend="${i == formateurs.number} ? 'active'">
+                        <a class="page-link" th:href="@{/admin/formateurs(page=${i}, size=${formateurs.size}, search=${search}, specialiteId=${specialiteId})}" 
+                           th:text="${i + 1}">1</a>
+                    </li>
+                    
+                    <li class="page-item" th:classappend="${formateurs.last} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/formateurs(page=${formateurs.number + 1}, size=${formateurs.size}, search=${search}, specialiteId=${specialiteId})}">
+                            Suivant
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+</body>
+</html>

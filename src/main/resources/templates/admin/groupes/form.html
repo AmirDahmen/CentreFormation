@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="${isEdit} ? 'Modifier un groupe' : 'Nouveau groupe'">Formulaire groupe</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">
+                    <i class="bi bi-collection-fill me-2 text-primary" th:if="${!isEdit}"></i>
+                    <i class="bi bi-pencil-fill me-2 text-warning" th:if="${isEdit}"></i>
+                    <span th:text="${isEdit} ? 'Modifier le groupe' : 'Nouveau groupe'"></span>
+                </h1>
+                <p class="text-muted mb-0">Configurez les informations du groupe</p>
+            </div>
+            <a th:href="@{/admin/groupes}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <form th:action="${isEdit} ? @{/admin/groupes/{id}/modifier(id=${groupe.id})} : @{/admin/groupes/nouveau}" 
+                  th:object="${groupe}" method="post">
+                
+                <!-- Informations principales -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-info-circle me-2"></i>Informations du groupe
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="nom" class="form-label fw-semibold">Nom du groupe <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" id="nom" th:field="*{nom}" 
+                                       placeholder="Ex: Groupe A - 2025" required>
+                                <div th:if="${#fields.hasErrors('nom')}" class="text-danger small mt-1" th:errors="*{nom}"></div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="code" class="form-label fw-semibold">Code</label>
+                                <input type="text" class="form-control form-control-lg" id="code" th:field="*{code}" 
+                                       placeholder="Ex: GRP-A-2025">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="specialite" class="form-label fw-semibold">Spécialité</label>
+                                <select class="form-select form-select-lg" id="specialite" th:field="*{specialite}">
+                                    <option value="">-- Sélectionner une spécialité --</option>
+                                    <option th:each="spec : ${specialites}" th:value="${spec.id}" th:text="${spec.nom}"></option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="sessionPedagogique" class="form-label fw-semibold">Session pédagogique</label>
+                                <select class="form-select form-select-lg" id="sessionPedagogique" th:field="*{sessionPedagogique}">
+                                    <option value="">-- Sélectionner une session --</option>
+                                    <option th:each="sess : ${sessions}" th:value="${sess.id}" 
+                                            th:text="${sess.anneeScolaire + ' - ' + sess.semestre}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Étudiants -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-people me-2"></i>Étudiants du groupe
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div th:if="${etudiants.empty}" class="text-center text-muted py-3">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Aucun étudiant disponible
+                        </div>
+                        <div th:unless="${etudiants.empty}" class="row g-2" style="max-height: 300px; overflow-y: auto;">
+                            <div class="col-md-6 col-lg-4" th:each="etudiant : ${etudiants}">
+                                <div class="form-check p-3 border rounded hover-bg-light">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="etudiantIds" th:value="${etudiant.id}" th:id="'etud-' + ${etudiant.id}"
+                                           th:checked="${selectedEtudiants != null && selectedEtudiants.contains(etudiant.id)}">
+                                    <label class="form-check-label w-100" th:for="'etud-' + ${etudiant.id}">
+                                        <span class="fw-semibold" th:text="${etudiant.prenom + ' ' + etudiant.nom}"></span>
+                                        <br><small class="text-muted" th:text="${etudiant.matricule}"></small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cours -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="bi bi-journal-bookmark me-2"></i>Cours associés
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div th:if="${cours.empty}" class="text-center text-muted py-3">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Aucun cours disponible
+                        </div>
+                        <div th:unless="${cours.empty}" class="row g-2" style="max-height: 300px; overflow-y: auto;">
+                            <div class="col-md-6 col-lg-4" th:each="c : ${cours}">
+                                <div class="form-check p-3 border rounded hover-bg-light">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="coursIds" th:value="${c.id}" th:id="'cours-' + ${c.id}"
+                                           th:checked="${selectedCours != null && selectedCours.contains(c.id)}">
+                                    <label class="form-check-label w-100" th:for="'cours-' + ${c.id}">
+                                        <span class="fw-semibold" th:text="${c.titre}"></span>
+                                        <br><small class="text-muted" th:text="${c.code}"></small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boutons -->
+                <div class="d-flex justify-content-end gap-3">
+                    <a th:href="@{/admin/groupes}" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="bi bi-x-lg me-2"></i>Annuler
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-check-lg me-2"></i>
+                        <span th:text="${isEdit} ? 'Enregistrer les modifications' : 'Créer le groupe'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

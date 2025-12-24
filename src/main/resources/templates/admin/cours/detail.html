@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="'Cours - ' + ${cours.titre}">Détail du cours</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- En-tête -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/admin/cours}">Cours</a></li>
+                        <li class="breadcrumb-item active" th:text="${cours.titre}"></li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold mb-1">
+                    <i class="bi bi-journal-bookmark-fill text-primary me-2"></i>
+                    <span th:text="${cours.titre}"></span>
+                </h1>
+                <p class="text-muted mb-0">
+                    <code th:text="${cours.code}"></code>
+                </p>
+            </div>
+            <div class="btn-group">
+                <a th:href="@{/admin/cours/{id}/modifier(id=${cours.id})}" class="btn btn-warning">
+                    <i class="bi bi-pencil me-1"></i> Modifier
+                </a>
+                <a th:href="@{/admin/notes/cours/{id}/saisir(id=${cours.id})}" class="btn btn-success">
+                    <i class="bi bi-award me-1"></i> Saisir notes
+                </a>
+                <a th:href="@{/admin/cours}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Info générales -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header text-white" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Code</label>
+                        <code class="fs-5" th:text="${cours.code}"></code>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Titre</label>
+                        <span class="fw-semibold" th:text="${cours.titre}"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Volume horaire</label>
+                        <span th:text="${cours.nombreHeures != null} ? ${cours.nombreHeures + ' heures'} : 'Non défini'"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Coefficient</label>
+                        <span class="badge bg-primary">Non défini</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Formateur</label>
+                        <div th:if="${cours.formateur}">
+                            <a th:href="@{/admin/formateurs/{id}(id=${cours.formateur.id})}" class="text-decoration-none">
+                                <i class="bi bi-person-workspace me-1"></i>
+                                <span th:text="${cours.formateur.prenom + ' ' + cours.formateur.nom}"></span>
+                            </a>
+                        </div>
+                        <span th:unless="${cours.formateur}" class="text-muted">Non assigné</span>
+                    </div>
+                    <div th:if="${cours.description}">
+                        <label class="small text-muted d-block">Description</label>
+                        <p th:text="${cours.description}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques et groupes -->
+        <div class="col-lg-8">
+            <div class="row g-4 mb-4">
+                <div class="col-sm-6">
+                    <div class="card border-0 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-collection-fill fs-1 mb-2 opacity-75"></i>
+                            <h2 class="fw-bold mb-0" th:text="${cours.groupes.size()}">0</h2>
+                            <p class="mb-0 opacity-75">Groupes assignés</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-0 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-people-fill fs-1 mb-2 opacity-75"></i>
+                            <h2 class="fw-bold mb-0" th:text="${cours.inscriptions != null ? cours.inscriptions.size() : 0}">0</h2>
+                            <p class="mb-0 opacity-75">Inscriptions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des groupes -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0"><i class="bi bi-collection me-2 text-primary"></i>Groupes du cours</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${cours.groupes.empty}" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        Aucun groupe associé à ce cours
+                    </div>
+                    <div th:unless="${cours.groupes.empty}" class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nom du groupe</th>
+                                    <th>Spécialité</th>
+                                    <th>Nb étudiants</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="groupe : ${cours.groupes}">
+                                    <td>
+                                        <i class="bi bi-people text-primary me-2"></i>
+                                        <span th:text="${groupe.nom}"></span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info" th:if="${groupe.specialite}" th:text="${groupe.specialite.nom}"></span>
+                                        <span th:unless="${groupe.specialite}" class="text-muted">-</span>
+                                    </td>
+                                    <td th:text="${groupe.etudiants.size()}"></td>
+                                    <td class="text-end">
+                                        <a th:href="@{/admin/groupes/{id}(id=${groupe.id})}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Voir
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

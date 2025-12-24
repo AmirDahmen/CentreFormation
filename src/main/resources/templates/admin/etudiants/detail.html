@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Détails étudiant</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- En-tête avec actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/admin/etudiants}">Étudiants</a></li>
+                    <li class="breadcrumb-item active" th:text="${etudiant.prenom + ' ' + etudiant.nom}"></li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">
+                <i class="bi bi-person-circle"></i> 
+                <span th:text="${etudiant.prenom + ' ' + etudiant.nom}"></span>
+            </h1>
+        </div>
+        <div>
+            <a th:href="@{/admin/etudiants/{id}/modifier(id=${etudiant.id})}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Modifier
+            </a>
+            <form th:action="@{/admin/etudiants/{id}/supprimer(id=${etudiant.id})}" 
+                  method="post" style="display: inline;">
+                <button type="submit" class="btn btn-danger" 
+                        onclick="return confirmDelete('Supprimer cet étudiant ?')">
+                    <i class="bi bi-trash"></i> Supprimer
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations personnelles -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-person-vcard"></i> Informations personnelles
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Matricule:</th>
+                            <td><strong th:text="${etudiant.matricule}"></strong></td>
+                        </tr>
+                        <tr>
+                            <th>Nom:</th>
+                            <td th:text="${etudiant.nom}"></td>
+                        </tr>
+                        <tr>
+                            <th>Prénom:</th>
+                            <td th:text="${etudiant.prenom}"></td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td><a th:href="'mailto:' + ${etudiant.email}" th:text="${etudiant.email}"></a></td>
+                        </tr>
+                        <tr>
+                            <th>Date d'inscription:</th>
+                            <td th:text="${#temporals.format(etudiant.dateInscription, 'dd/MM/yyyy')}"></td>
+                        </tr>
+                        <tr>
+                            <th>Spécialité:</th>
+                            <td>
+                                <span th:if="${etudiant.specialite}" 
+                                      class="badge bg-info" 
+                                      th:text="${etudiant.specialite.nom}">
+                                </span>
+                                <span th:unless="${etudiant.specialite}" class="text-muted">Non définie</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Groupes -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <i class="bi bi-diagram-3"></i> Groupes 
+                    <span class="badge bg-primary" th:text="${etudiant.groupes.size()}">0</span>
+                </div>
+                <div class="card-body">
+                    <div th:if="${etudiant.groupes.isEmpty()}" class="text-muted">
+                        <i class="bi bi-info-circle"></i> Aucun groupe assigné
+                    </div>
+                    <div th:unless="${etudiant.groupes.isEmpty()}">
+                        <div th:each="groupe : ${etudiant.groupes}" class="mb-2">
+                            <span class="badge bg-secondary me-1" th:text="${groupe.nom}"></span>
+                            <small th:if="${groupe.code}" class="text-muted" th:text="'(' + ${groupe.code} + ')'"></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <i class="bi bi-graph-up"></i> Statistiques
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Cours inscrits:</span>
+                        <strong><span class="badge bg-primary" th:text="${inscriptions.size()}">0</span></strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Notes enregistrées:</span>
+                        <strong><span class="badge bg-success" th:text="${notes.size()}">0</span></strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Moyenne générale:</span>
+                        <strong>
+                            <span th:if="${moyenne != null}" 
+                                  th:text="${#numbers.formatDecimal(moyenne, 1, 2)}"
+                                  class="badge"
+                                  th:classappend="${moyenne >= 10} ? 'bg-success' : 'bg-danger'">
+                            </span>
+                            <span th:unless="${moyenne != null}" class="text-muted">-</span>
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- Inscriptions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="bi bi-clipboard-check"></i> Inscriptions aux cours
+                    <span class="badge bg-primary ms-2" th:text="${inscriptions.size()}">0</span>
+                </div>
+                <div class="card-body">
+                    <div th:if="${inscriptions.isEmpty()}" class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Aucune inscription enregistrée
+                    </div>
+                    <div th:unless="${inscriptions.isEmpty()}" class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cours</th>
+                                    <th>Code</th>
+                                    <th>Date inscription</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="inscription : ${inscriptions}">
+                                    <td th:text="${inscription.cours.titre}"></td>
+                                    <td><code th:text="${inscription.cours.code}"></code></td>
+                                    <td th:text="${#temporals.format(inscription.dateInscription, 'dd/MM/yyyy HH:mm')}"></td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${inscription.statut.name() == 'ACTIVE'} ? 'bg-success' : 
+                                                             (${inscription.statut.name() == 'ANNULEE'} ? 'bg-danger' : 'bg-secondary')"
+                                              th:text="${inscription.statut}">
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-file-earmark-text"></i> Notes
+                    <span class="badge bg-primary ms-2" th:text="${notes.size()}">0</span>
+                </div>
+                <div class="card-body">
+                    <div th:if="${notes.isEmpty()}" class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Aucune note enregistrée
+                    </div>
+                    <div th:unless="${notes.isEmpty()}" class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cours</th>
+                                    <th>Note</th>
+                                    <th>Date de saisie</th>
+                                    <th>Commentaire</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="note : ${notes}">
+                                    <td th:text="${note.cours.titre}"></td>
+                                    <td>
+                                        <strong class="fs-5" 
+                                                th:classappend="${note.valeur >= 10} ? 'text-success' : 'text-danger'"
+                                                th:text="${#numbers.formatDecimal(note.valeur, 1, 2)} + '/20'">
+                                        </strong>
+                                    </td>
+                                    <td th:text="${#temporals.format(note.dateSaisie, 'dd/MM/yyyy')}"></td>
+                                    <td>
+                                        <small class="text-muted" th:text="${note.commentaire}"></small>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

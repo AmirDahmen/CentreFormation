@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="'Saisie des notes - ' + ${cours.titre}">Saisie des notes</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- En-tête -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a th:href="@{/admin}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a th:href="@{/admin/notes}">Notes</a></li>
+                        <li class="breadcrumb-item active">Saisie</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 fw-bold mb-1">
+                    <i class="bi bi-award-fill text-warning me-2"></i>
+                    Saisie des notes
+                </h1>
+                <p class="text-muted mb-0">
+                    <span th:text="${cours.code + ' - ' + cours.titre}"></span>
+                </p>
+            </div>
+            <div class="btn-group">
+                <a th:href="@{/admin/cours/{id}(id=${cours.id})}" class="btn btn-outline-primary">
+                    <i class="bi bi-journal-bookmark me-1"></i> Voir le cours
+                </a>
+                <a th:href="@{/admin/notes}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info cours -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center p-3">
+                    <h4 class="fw-bold mb-0" th:text="${inscriptions.size()}">0</h4>
+                    <small class="opacity-75">Étudiants inscrits</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-center p-3">
+                    <h4 class="fw-bold mb-0" th:text="${notes.size()}">0</h4>
+                    <small class="opacity-75">Notes saisies</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center p-3">
+                    <h4 class="fw-bold mb-0" th:text="${inscriptions.size() - notes.size()}">0</h4>
+                    <small class="opacity-75">Notes manquantes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau de saisie -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+            <h5 class="mb-0 fw-semibold">
+                <i class="bi bi-pencil-square me-2"></i>Liste des étudiants
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div th:if="${inscriptions.empty}" class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                <h5>Aucun étudiant inscrit</h5>
+                <p>Il n'y a pas d'étudiants inscrits à ce cours.</p>
+                <a th:href="@{/admin/inscriptions/nouvelle}" class="btn btn-primary">
+                    <i class="bi bi-plus me-1"></i> Créer une inscription
+                </a>
+            </div>
+            
+            <div th:unless="${inscriptions.empty}" class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Matricule</th>
+                            <th>Étudiant</th>
+                            <th class="text-center">Note actuelle</th>
+                            <th>Commentaire</th>
+                            <th class="text-center" style="width: 300px;">Saisir / Modifier</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="inscription : ${inscriptions}">
+                            <td>
+                                <code th:text="${inscription.etudiant.matricule}"></code>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/etudiants/{id}(id=${inscription.etudiant.id})}" class="text-decoration-none">
+                                    <span th:text="${inscription.etudiant.prenom + ' ' + inscription.etudiant.nom}"></span>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <th:block th:with="noteExistante=${notes.?[etudiant.id == inscription.etudiant.id]}">
+                                    <span th:if="${!noteExistante.empty}" 
+                                          th:class="${noteExistante[0].valeur >= 10 ? 'badge bg-success fs-6' : 'badge bg-danger fs-6'}"
+                                          th:text="${noteExistante[0].valeur + '/20'}">-</span>
+                                    <span th:if="${noteExistante.empty}" class="text-muted">Non noté</span>
+                                </th:block>
+                            </td>
+                            <td>
+                                <th:block th:with="noteExistante=${notes.?[etudiant.id == inscription.etudiant.id]}">
+                                    <small th:if="${!noteExistante.empty && noteExistante[0].commentaire != null}" 
+                                           th:text="${noteExistante[0].commentaire}" class="text-muted"></small>
+                                </th:block>
+                            </td>
+                            <td>
+                                <th:block th:with="noteExistante=${notes.?[etudiant.id == inscription.etudiant.id]}">
+                                    <!-- Formulaire de saisie si pas de note -->
+                                    <form th:if="${noteExistante.empty}" th:action="@{/admin/notes/saisir}" method="post" class="d-flex gap-2">
+                                        <input type="hidden" name="etudiantId" th:value="${inscription.etudiant.id}">
+                                        <input type="hidden" name="coursId" th:value="${cours.id}">
+                                        <input type="number" name="valeur" class="form-control form-control-sm" 
+                                               placeholder="Note" min="0" max="20" step="0.25" required style="width: 80px;">
+                                        <input type="text" name="commentaire" class="form-control form-control-sm" 
+                                               placeholder="Commentaire" style="width: 120px;">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-check"></i>
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Formulaire de modification si note existe -->
+                                    <form th:if="${!noteExistante.empty}" th:action="@{/admin/notes/{id}/modifier(id=${noteExistante[0].id})}" 
+                                          method="post" class="d-flex gap-2">
+                                        <input type="number" name="valeur" class="form-control form-control-sm" 
+                                               th:value="${noteExistante[0].valeur}" min="0" max="20" step="0.25" required style="width: 80px;">
+                                        <input type="text" name="commentaire" class="form-control form-control-sm" 
+                                               th:value="${noteExistante[0].commentaire}" placeholder="Commentaire" style="width: 120px;">
+                                        <button type="submit" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <a th:href="@{/admin/notes/{id}/supprimer(id=${noteExistante[0].id})}" 
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Supprimer cette note ?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </form>
+                                </th:block>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

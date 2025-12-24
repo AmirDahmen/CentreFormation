@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="${cours.id != null} ? 'Modifier Cours' : 'Nouveau Cours'">Cours</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">
+            <i class="bi bi-book"></i>
+            <span th:text="${cours.id != null} ? 'Modifier Cours' : 'Nouveau Cours'"></span>
+        </h1>
+        <a th:href="@{/admin/cours}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="${cours.id != null} ? @{/admin/cours/{id}/modifier(id=${cours.id})} : @{/admin/cours/nouveau}" 
+                          th:object="${cours}" 
+                          method="post" 
+                          class="needs-validation" 
+                          novalidate>
+                        
+                        <!-- Informations principales -->
+                        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informations du cours</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="code" class="form-label">Code *</label>
+                                <input type="text" id="code" th:field="*{code}" 
+                                       class="form-control" required
+                                       placeholder="Ex: JAVA101">
+                                <div class="invalid-feedback">Le code est requis</div>
+                            </div>
+                            <div class="col-md-8">
+                                <label for="titre" class="form-label">Titre *</label>
+                                <input type="text" id="titre" th:field="*{titre}" 
+                                       class="form-control" required
+                                       placeholder="Ex: Introduction à Java">
+                                <div class="invalid-feedback">Le titre est requis</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea id="description" th:field="*{description}" 
+                                      class="form-control" rows="3"
+                                      placeholder="Description détaillée du cours..."></textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="nombreHeures" class="form-label">Nombre d'heures *</label>
+                                <input type="number" id="nombreHeures" th:field="*{nombreHeures}" 
+                                       class="form-control" min="1" required>
+                                <div class="invalid-feedback">Le nombre d'heures est requis (min: 1)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="formateurId" class="form-label">Formateur</label>
+                                <select id="formateurId" name="formateurId" 
+                                        class="form-select">
+                                    <option value="">Sélectionner un formateur</option>
+                                    <option th:each="f : ${formateurs}" 
+                                            th:value="${f.id}" 
+                                            th:text="${f.nom + ' ' + f.prenom}"
+                                            th:selected="${cours.formateur != null && cours.formateur.id == f.id}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Groupes -->
+                        <h5 class="mb-3"><i class="bi bi-diagram-3"></i> Assignation aux groupes</h5>
+                        <p class="text-muted">Sélectionnez les groupes qui suivront ce cours</p>
+                        
+                        <div class="mb-3" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem;">
+                            <div th:if="${groupes.empty}" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Aucun groupe disponible
+                            </div>
+                            <div th:each="groupe : ${groupes}" class="form-check mb-2">
+                                <input type="checkbox" 
+                                       th:id="'groupe_' + ${groupe.id}"
+                                       name="groupeIds"
+                                       th:value="${groupe.id}"
+                                       th:checked="${cours.groupes != null && cours.groupes.contains(groupe)}"
+                                       class="form-check-input">
+                                <label th:for="'groupe_' + ${groupe.id}" class="form-check-label">
+                                    <strong th:text="${groupe.nom}"></strong>
+                                    <span th:if="${groupe.specialite}" class="badge bg-info ms-2" 
+                                          th:text="${groupe.specialite.nom}"></span>
+                                    <span th:if="${groupe.sessionPedagogique}" class="badge bg-secondary ms-1" 
+                                          th:text="${groupe.sessionPedagogique.anneeScolaire}"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between">
+                            <a th:href="@{/admin/cours}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle"></i>
+                                <span th:text="${cours.id != null} ? 'Enregistrer' : 'Créer'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

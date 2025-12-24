@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Gestion des Spécialités</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-stars"></i> Gestion des Spécialités</h1>
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#specialiteModal">
+            <i class="bi bi-plus-circle"></i> Nouvelle Spécialité
+        </button>
+    </div>
+
+    <!-- Liste des spécialités -->
+    <div class="row">
+        <div th:each="specialite : ${specialites}" class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${specialite.nom}"></h5>
+                    <p class="card-text text-muted" th:text="${specialite.description}"></p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <span class="badge bg-info" th:text="${specialite.etudiants.size()} + ' étudiants'"></span>
+                            <span class="badge bg-success" th:text="${specialite.formateurs.size()} + ' formateurs'"></span>
+                        </div>
+                        <div class="btn-group">
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-secondary" 
+                                    onclick="editSpecialite(this)"
+                                    th:attr="data-id=${specialite.id}, data-nom=${specialite.nom}, data-description=${specialite.description}"
+                                    title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <a href="#" 
+                               onclick="return confirmDelete(this)" 
+                               th:href="@{/admin/specialites/{id}/supprimer(id=${specialite.id})}" 
+                               class="btn btn-sm btn-outline-danger" 
+                               title="Supprimer">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${specialites.empty}" class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2">Aucune spécialité enregistrée</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour créer/modifier une spécialité -->
+    <div class="modal fade" id="specialiteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Nouvelle Spécialité</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="specialiteForm" method="post" th:action="@{/admin/specialites/nouvelle}">
+                    <input type="hidden" id="specialiteId" name="id">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom *</label>
+                            <input type="text" class="form-control" id="nom" name="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-warning">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script layout:fragment="scripts">
+function editSpecialite(btn) {
+    const id = btn.getAttribute('data-id');
+    const nom = btn.getAttribute('data-nom');
+    const description = btn.getAttribute('data-description');
+    
+    document.getElementById('modalTitle').textContent = 'Modifier Spécialité';
+    document.getElementById('specialiteId').value = id;
+    document.getElementById('nom').value = nom;
+    document.getElementById('description').value = description;
+    
+    document.getElementById('specialiteForm').action = '/admin/specialites/' + id + '/modifier';
+    
+    const modal = new bootstrap.Modal(document.getElementById('specialiteModal'));
+    modal.show();
+}
+
+// Reset form when modal is closed
+document.getElementById('specialiteModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('modalTitle').textContent = 'Nouvelle Spécialité';
+    document.getElementById('specialiteForm').reset();
+    document.getElementById('specialiteForm').action = '/admin/specialites/nouvelle';
+});
+</script>
+</body>
+</html>

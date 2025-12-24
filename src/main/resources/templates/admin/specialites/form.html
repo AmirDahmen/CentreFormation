@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="${isEdit} ? 'Modifier une spécialité' : 'Nouvelle spécialité'">Formulaire spécialité</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">
+                    <i class="bi bi-bookmark-star-fill me-2 text-primary" th:if="${!isEdit}"></i>
+                    <i class="bi bi-pencil-fill me-2 text-warning" th:if="${isEdit}"></i>
+                    <span th:text="${isEdit} ? 'Modifier la spécialité' : 'Nouvelle spécialité'"></span>
+                </h1>
+                <p class="text-muted mb-0">Définissez les informations de la spécialité</p>
+            </div>
+            <a th:href="@{/admin/specialites}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-bookmark-star me-2"></i>Informations de la spécialité
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="${isEdit} ? @{/admin/specialites/{id}/modifier(id=${specialite.id})} : @{/admin/specialites/nouvelle}" 
+                          th:object="${specialite}" method="post">
+                        
+                        <div class="mb-4">
+                            <label for="nom" class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-lg" id="nom" th:field="*{nom}" 
+                                   placeholder="Ex: Informatique de gestion" required>
+                            <div th:if="${#fields.hasErrors('nom')}" class="text-danger small mt-1" th:errors="*{nom}"></div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="description" class="form-label fw-semibold">Description</label>
+                            <textarea class="form-control" id="description" th:field="*{description}" rows="4"
+                                      placeholder="Description détaillée de la spécialité..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-3 pt-3 border-top">
+                            <a th:href="@{/admin/specialites}" class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="bi bi-x-lg me-2"></i>Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-check-lg me-2"></i>
+                                <span th:text="${isEdit} ? 'Enregistrer' : 'Créer la spécialité'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

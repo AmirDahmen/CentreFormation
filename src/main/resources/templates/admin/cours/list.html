@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Gestion des Cours</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-book"></i> Gestion des Cours</h1>
+        <a th:href="@{/admin/cours/nouveau}" class="btn btn-warning">
+            <i class="bi bi-plus-circle"></i> Nouveau Cours
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/admin/cours}" method="get" class="row g-3">
+                <div class="col-md-8">
+                    <label class="form-label">Recherche</label>
+                    <input type="text" name="search" th:value="${search}" 
+                           class="form-control" placeholder="Code, titre, description...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Heures min</label>
+                    <input type="number" name="nbHeuresMin" th:value="${nbHeuresMin}" 
+                           class="form-control" placeholder="0">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des cours -->
+    <div class="card">
+        <div class="card-header">
+            <i class="bi bi-list-ul"></i> Liste des Cours
+            <span class="badge bg-secondary float-end" th:text="${cours.totalElements + ' cours'}"></span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Titre</th>
+                            <th>Formateur</th>
+                            <th>Heures</th>
+                            <th>Groupes</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${cours.empty}">
+                            <td colspan="6" class="text-center text-muted">
+                                <i class="bi bi-inbox"></i> Aucun cours trouvé
+                            </td>
+                        </tr>
+                        <tr th:each="c : ${cours}" 
+                            th:onclick="'window.location.href=\'' + @{/admin/cours/{id}(id=${c.id})} + '\''"
+                            style="cursor: pointer;">
+                            <td><code th:text="${c.code}"></code></td>
+                            <td>
+                                <strong th:text="${c.titre}"></strong>
+                                <br>
+                                <small class="text-muted" th:text="${c.description}"></small>
+                            </td>
+                            <td>
+                                <span th:if="${c.formateur}" 
+                                      th:text="${c.formateur.nom + ' ' + c.formateur.prenom}"></span>
+                                <span th:unless="${c.formateur}" class="text-muted">Non assigné</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info" th:text="${c.nombreHeures != null} ? ${c.nombreHeures + ' h'} : '-'"></span>
+                            </td>
+                            <td>
+                                <span th:each="g : ${c.groupes}" 
+                                      class="badge bg-secondary me-1" 
+                                      th:text="${g.nom}"></span>
+                                <span th:if="${c.groupes.empty}" class="text-muted">Aucun</span>
+                            </td>
+                            <td class="text-end" onclick="event.stopPropagation()">
+                                <div class="btn-group" role="group">
+                                    <a th:href="@{/admin/cours/{id}(id=${c.id})}" 
+                                       class="btn btn-sm btn-outline-primary" title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a th:href="@{/admin/cours/{id}/modifier(id=${c.id})}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form th:action="@{/admin/cours/{id}/supprimer(id=${c.id})}" 
+                                          method="post" style="display:inline;"
+                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce cours ?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav th:if="${cours.totalPages > 1}">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item" th:classappend="${cours.first} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/cours(page=${cours.number - 1}, size=${cours.size}, search=${search}, nbHeuresMin=${nbHeuresMin})}">
+                            Précédent
+                        </a>
+                    </li>
+                    
+                    <li class="page-item" 
+                        th:each="i : ${#numbers.sequence(0, cours.totalPages - 1)}"
+                        th:classappend="${i == cours.number} ? 'active'">
+                        <a class="page-link" th:href="@{/admin/cours(page=${i}, size=${cours.size}, search=${search}, nbHeuresMin=${nbHeuresMin})}" 
+                           th:text="${i + 1}">1</a>
+                    </li>
+                    
+                    <li class="page-item" th:classappend="${cours.last} ? 'disabled'">
+                        <a class="page-link" th:href="@{/admin/cours(page=${cours.number + 1}, size=${cours.size}, search=${search}, nbHeuresMin=${nbHeuresMin})}">
+                            Suivant
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+</body>
+</html>
