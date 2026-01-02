@@ -56,6 +56,7 @@
                   th:action="@{/admin/notes/saisir-par-cours}" 
                   method="post">
                 
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <input type="hidden" name="coursId" th:value="${coursId}">
                 
                 <div class="table-responsive">
@@ -73,8 +74,7 @@
                             <tr th:each="inscription, iterStat : ${inscriptions}">
                                 <td>
                                     <code th:text="${inscription.etudiant.matricule}"></code>
-                                    <input type="hidden" 
-                                           th:name="'etudiantIds[' + ${iterStat.index} + ']'" 
+                                    <input type="hidden" name="etudiantIds"
                                            th:value="${inscription.etudiant.id}">
                                 </td>
                                 <td th:text="${inscription.etudiant.nom + ' ' + inscription.etudiant.prenom}"></td>
@@ -89,7 +89,7 @@
                                 </td>
                                 <td>
                                     <input type="number" 
-                                           th:name="'notes[' + ${iterStat.index} + ']'" 
+                                           name="notes"
                                            class="form-control" 
                                            min="0" 
                                            max="20" 
@@ -99,7 +99,7 @@
                                 </td>
                                 <td>
                                     <input type="text" 
-                                           th:name="'observations[' + ${iterStat.index} + ']'" 
+                                           name="observations"
                                            class="form-control" 
                                            placeholder="Commentaire...">
                                 </td>

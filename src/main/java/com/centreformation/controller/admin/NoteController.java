@@ -1,7 +1,6 @@
 package com.centreformation.controller.admin;
 
 import com.centreformation.entity.Cours;
-import com.centreformation.entity.Etudiant;
 import com.centreformation.entity.Inscription;
 import com.centreformation.entity.Note;
 import com.centreformation.service.CoursService;
@@ -18,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/notes")
@@ -51,6 +52,7 @@ public class NoteController {
         model.addAttribute("notes", notesPage);
         model.addAttribute("etudiants", etudiantService.findAll());
         model.addAttribute("cours", coursService.findAll());
+        model.addAttribute("allCours", coursService.findAll());
         model.addAttribute("etudiantId", etudiantId);
         model.addAttribute("coursId", coursId);
         model.addAttribute("activePage", "notes");
@@ -58,6 +60,61 @@ public class NoteController {
         model.addAttribute("totalPages", notesPage.getTotalPages());
         
         return "admin/notes/list";
+    }
+
+    @GetMapping("/saisir-par-cours")
+    public String saisirParCours(@RequestParam(required = false) Long coursId, Model model) {
+        model.addAttribute("allCours", coursService.findAll());
+        model.addAttribute("coursId", coursId);
+        model.addAttribute("activePage", "notes");
+
+        if (coursId != null) {
+            List<Inscription> inscriptions = inscriptionService.findByCours(coursId);
+            List<Note> notes = noteService.findByCours(coursId);
+            Map<Long, Double> notesMap = notes.stream()
+                .collect(Collectors.toMap(note -> note.getEtudiant().getId(), Note::getValeur, (a, b) -> a));
+
+            model.addAttribute("inscriptions", inscriptions);
+            model.addAttribute("notesMap", notesMap);
+        }
+
+        return "admin/notes/form";
+    }
+
+    @PostMapping("/saisir-par-cours")
+    public String saisirParCoursPost(@RequestParam Long coursId,
+                                     @RequestParam(required = false) List<Long> etudiantIds,
+                                     @RequestParam(name = "notes", required = false) List<String> notesValues,
+                                     @RequestParam(name = "observations", required = false) List<String> observations,
+                                     RedirectAttributes redirectAttributes) {
+        if (etudiantIds == null || etudiantIds.isEmpty() || notesValues == null || notesValues.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Aucune note a enregistrer.");
+            return "redirect:/admin/notes/saisir-par-cours?coursId=" + coursId;
+        }
+
+        int saved = 0;
+        int count = Math.min(etudiantIds.size(), notesValues.size());
+        try {
+            for (int i = 0; i < count; i++) {
+                String raw = notesValues.get(i);
+                if (raw == null || raw.trim().isEmpty()) {
+                    continue;
+                }
+                Double valeur = Double.parseDouble(raw.trim().replace(",", "."));
+                String commentaire = (observations != null && observations.size() > i) ? observations.get(i) : null;
+                noteService.saisirNote(etudiantIds.get(i), coursId, valeur, commentaire, null);
+                saved++;
+            }
+            if (saved > 0) {
+                redirectAttributes.addFlashAttribute("successMessage", saved + " note(s) enregistree(s).");
+            } else {
+                redirectAttributes.addFlashAttribute("errorMessage", "Aucune note a enregistrer.");
+            }
+            return "redirect:/admin/notes/saisir-par-cours?coursId=" + coursId;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Erreur : " + e.getMessage());
+            return "redirect:/admin/notes/saisir-par-cours?coursId=" + coursId;
+        }
     }
 
     @GetMapping("/cours/{coursId}/saisir")

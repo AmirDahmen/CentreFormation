@@ -22,7 +22,7 @@
                     <label class="form-label">Cours</label>
                     <select name="coursId" class="form-select">
                         <option value="">Tous les cours</option>
-                        <option th:each="c : ${allCours}" 
+                        <option th:each="c : ${cours}" 
                                 th:value="${c.id}" 
                                 th:text="${c.code + ' - ' + c.titre}"
                                 th:selected="${coursId != null && coursId == c.id}">
@@ -91,17 +91,23 @@
                                 <br>
                                 <small th:text="${note.cours.titre}"></small>
                             </td>
-                            <td th:text="${note.formateur.nom + ' ' + note.formateur.prenom}"></td>
+                            <td>
+                                <span th:if="${note.formateur != null}" 
+                                      th:text="${note.formateur.nom + ' ' + note.formateur.prenom}"></span>
+                                <span th:if="${note.formateur == null && note.cours.formateur != null}"
+                                      th:text="${note.cours.formateur.nom + ' ' + note.cours.formateur.prenom}"></span>
+                                <span th:if="${note.formateur == null && note.cours.formateur == null}" class="text-muted">-</span>
+                            </td>
                             <td>
                                 <span class="badge" 
                                       th:classappend="${note.valeur >= 16} ? 'bg-success' : (${note.valeur >= 12} ? 'bg-primary' : (${note.valeur >= 10} ? 'bg-warning' : 'bg-danger'))"
                                       th:text="${note.valeur + ' / 20'}"></span>
                             </td>
-                            <td th:text="${#temporals.format(note.dateEvaluation, 'dd/MM/yyyy')}"></td>
+                            <td th:text="${#temporals.format(note.dateSaisie, 'dd/MM/yyyy')}"></td>
                             <td class="text-end">
                                 <div class="btn-group" role="group">
-                                    <a th:href="@{/admin/notes/{id}/modifier(id=${note.id})}" 
-                                       class="btn btn-sm btn-outline-secondary" title="Modifier">
+                                    <a th:href="@{/admin/notes/cours/{id}/saisir(id=${note.cours.id})}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Saisir/Modifier">
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <a href="#" 

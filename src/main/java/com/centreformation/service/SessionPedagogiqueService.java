@@ -1,77 +1,26 @@
 package com.centreformation.service;
 
 import com.centreformation.entity.SessionPedagogique;
-import com.centreformation.repository.SessionPedagogiqueRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-@Transactional
-public class SessionPedagogiqueService {
+public interface SessionPedagogiqueService {
 
-    private final SessionPedagogiqueRepository sessionRepository;
+    List<SessionPedagogique> findAll();
 
-    public List<SessionPedagogique> findAll() {
-        return sessionRepository.findAll();
-    }
+    Page<SessionPedagogique> findAll(Pageable pageable);
 
-    public Page<SessionPedagogique> findAll(Pageable pageable) {
-        return sessionRepository.findAll(pageable);
-    }
+    SessionPedagogique findById(Long id);
 
-    public SessionPedagogique findById(Long id) {
-        return sessionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Session pédagogique non trouvée avec l'ID: " + id));
-    }
+    Page<SessionPedagogique> search(String keyword, Pageable pageable);
 
-    public Page<SessionPedagogique> search(String keyword, Pageable pageable) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return findAll(pageable);
-        }
-        return sessionRepository.searchSessions(keyword, pageable);
-    }
+    SessionPedagogique save(SessionPedagogique session);
 
-    public SessionPedagogique save(SessionPedagogique session) {
-        // Validation des dates
-        if (session.getDateDebut() != null && session.getDateFin() != null && 
-            session.getDateFin().isBefore(session.getDateDebut())) {
-            throw new RuntimeException("La date de fin doit être postérieure à la date de début");
-        }
-        
-        return sessionRepository.save(session);
-    }
+    SessionPedagogique update(Long id, SessionPedagogique session);
 
-    public SessionPedagogique update(Long id, SessionPedagogique session) {
-        SessionPedagogique existing = findById(id);
-        
-        // Validation des dates
-        if (session.getDateDebut() != null && session.getDateFin() != null && 
-            session.getDateFin().isBefore(session.getDateDebut())) {
-            throw new RuntimeException("La date de fin doit être postérieure à la date de début");
-        }
-        
-        existing.setAnneeScolaire(session.getAnneeScolaire());
-        existing.setSemestre(session.getSemestre());
-        existing.setDateDebut(session.getDateDebut());
-        existing.setDateFin(session.getDateFin());
-        
-        return sessionRepository.save(existing);
-    }
+    void deleteById(Long id);
 
-    public void deleteById(Long id) {
-        if (!sessionRepository.existsById(id)) {
-            throw new RuntimeException("Session pédagogique non trouvée avec l'ID: " + id);
-        }
-        sessionRepository.deleteById(id);
-    }
-
-    public long count() {
-        return sessionRepository.count();
-    }
+    long count();
 }

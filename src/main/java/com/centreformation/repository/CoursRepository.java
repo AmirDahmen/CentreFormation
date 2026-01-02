@@ -2,7 +2,6 @@ package com.centreformation.repository;
 
 import com.centreformation.entity.Cours;
 import com.centreformation.entity.Formateur;
-import com.centreformation.entity.Groupe;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

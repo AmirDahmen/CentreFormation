@@ -2,7 +2,6 @@ package com.centreformation.controller.admin;
 
 import com.centreformation.entity.Cours;
 import com.centreformation.entity.Formateur;
-import com.centreformation.service.CoursService;
 import com.centreformation.service.FormateurService;
 import com.centreformation.service.SpecialiteService;
 import jakarta.validation.Valid;
@@ -25,7 +24,6 @@ public class FormateurController {
 
     private final FormateurService formateurService;
     private final SpecialiteService specialiteService;
-    private final CoursService coursService;
 
     @GetMapping
     public String list(@RequestParam(defaultValue = "0") int page,

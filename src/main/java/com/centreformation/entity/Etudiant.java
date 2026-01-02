@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ public class Etudiant {
     private String email;
 
     @Column(name = "date_inscription")
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dateInscription;
 
     @ManyToOne
