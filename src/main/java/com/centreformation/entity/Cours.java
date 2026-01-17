@@ -1,5 +1,7 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -37,14 +39,17 @@ public class Cours {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "formateur_id", referencedColumnName = "id", 
                 foreignKey = @ForeignKey(name = "fk_cours_formateur"))
+    @JsonIgnoreProperties({"cours", "seances", "utilisateur", "specialite"})
     private Formateur formateur;
 
     @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonIgnore
     private Set<Inscription> inscriptions = new HashSet<>();
 
     @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonIgnore
     private Set<Note> notes = new HashSet<>();
 
     @ManyToMany
@@ -54,9 +59,11 @@ public class Cours {
         inverseJoinColumns = @JoinColumn(name = "groupe_id")
     )
     @Builder.Default
+    @JsonIgnore
     private Set<Groupe> groupes = new HashSet<>();
 
     @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonIgnore
     private Set<SeanceCours> seances = new HashSet<>();
 }

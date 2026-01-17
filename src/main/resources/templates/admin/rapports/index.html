@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+
+<head>
+    <title>Rapports PDF - Centre de Formation</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête de page -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>Génération de Rapports PDF
+                </h1>
+                <p class="text-muted mb-0">Générer et télécharger des rapports au format PDF</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Rapport Statistiques Global -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-chart-bar me-2"></i>Rapport Statistique Global
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Génère un rapport complet avec les statistiques du centre de formation :
+                        </p>
+                        <ul class="small">
+                            <li>Nombre total d'étudiants, formateurs, cours</li>
+                            <li>Inscriptions actives</li>
+                            <li>Moyenne générale et taux de réussite</li>
+                            <li>Cours les plus populaires</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <a th:href="@{/admin/rapports/statistiques}" 
+                           class="btn btn-primary w-100"
+                           target="_blank">
+                            <i class="fas fa-download me-2"></i>Télécharger
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulletin de Notes par Étudiant -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-success">
+                    <div class="card-header bg-success text-white">
+                        <i class="fas fa-user-graduate me-2"></i>Bulletin de Notes
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Génère le bulletin de notes d'un étudiant avec toutes ses notes et sa moyenne générale.
+                        </p>
+                        <form id="formBulletin">
+                            <div class="mb-3">
+                                <label for="etudiantBulletin" class="form-label">Sélectionner un étudiant</label>
+                                <select class="form-select" id="etudiantBulletin" required>
+                                    <option value="">-- Choisir un étudiant --</option>
+                                    <option th:each="etudiant : ${etudiants}" 
+                                            th:value="${etudiant.id}"
+                                            th:text="${etudiant.matricule + ' - ' + etudiant.nom + ' ' + etudiant.prenom}">
+                                    </option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button type="button" 
+                                class="btn btn-success w-100"
+                                onclick="downloadBulletin()">
+                            <i class="fas fa-download me-2"></i>Télécharger
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attestation d'Inscription -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-info">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-certificate me-2"></i>Attestation d'Inscription
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Génère une attestation d'inscription officielle pour un étudiant.
+                        </p>
+                        <form id="formAttestation">
+                            <div class="mb-3">
+                                <label for="etudiantAttestation" class="form-label">Sélectionner un étudiant</label>
+                                <select class="form-select" id="etudiantAttestation" required>
+                                    <option value="">-- Choisir un étudiant --</option>
+                                    <option th:each="etudiant : ${etudiants}" 
+                                            th:value="${etudiant.id}"
+                                            th:text="${etudiant.matricule + ' - ' + etudiant.nom + ' ' + etudiant.prenom}">
+                                    </option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button type="button" 
+                                class="btn btn-info w-100"
+                                onclick="downloadAttestation()">
+                            <i class="fas fa-download me-2"></i>Télécharger
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Liste des Étudiants par Cours -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fas fa-list me-2"></i>Liste des Étudiants d'un Cours
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Génère la liste de tous les étudiants inscrits à un cours spécifique.
+                        </p>
+                        <form id="formListeEtudiants">
+                            <div class="mb-3">
+                                <label for="coursListe" class="form-label">Sélectionner un cours</label>
+                                <select class="form-select" id="coursListe" required>
+                                    <option value="">-- Choisir un cours --</option>
+                                    <option th:each="c : ${cours}" 
+                                            th:value="${c.id}"
+                                            th:text="${c.code + ' - ' + c.titre}">
+                                    </option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button type="button" 
+                                class="btn btn-warning w-100"
+                                onclick="downloadListeEtudiants()">
+                            <i class="fas fa-download me-2"></i>Télécharger
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relevé de Notes par Cours -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <i class="fas fa-clipboard-list me-2"></i>Relevé de Notes d'un Cours
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            Génère le relevé de notes complet d'un cours avec :
+                        </p>
+                        <ul class="small">
+                            <li>Liste des notes de tous les étudiants</li>
+                            <li>Moyenne du cours</li>
+                            <li>Taux de réussite</li>
+                        </ul>
+                        <form id="formReleveNotes">
+                            <div class="mb-3">
+                                <label for="coursNotes" class="form-label">Sélectionner un cours</label>
+                                <select class="form-select" id="coursNotes" required>
+                                    <option value="">-- Choisir un cours --</option>
+                                    <option th:each="c : ${cours}" 
+                                            th:value="${c.id}"
+                                            th:text="${c.code + ' - ' + c.titre}">
+                                    </option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button type="button" 
+                                class="btn btn-danger w-100"
+                                onclick="downloadReleveNotes()">
+                            <i class="fas fa-download me-2"></i>Télécharger
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aide -->
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <i class="fas fa-info-circle me-2"></i>Aide
+                    </div>
+                    <div class="card-body">
+                        <h6>Comment utiliser :</h6>
+                        <ol class="small">
+                            <li>Sélectionnez le type de rapport souhaité</li>
+                            <li>Choisissez les paramètres si nécessaire (étudiant, cours)</li>
+                            <li>Cliquez sur "Télécharger" pour générer le PDF</li>
+                        </ol>
+                        <hr>
+                        <h6>Formats disponibles :</h6>
+                        <p class="small mb-0">
+                            <span class="badge bg-danger">PDF</span>
+                            Tous les rapports sont générés au format PDF et peuvent être imprimés ou partagés.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        function downloadBulletin() {
+            const etudiantId = document.getElementById('etudiantBulletin').value;
+            if (!etudiantId) {
+                alert('Veuillez sélectionner un étudiant');
+                return;
+            }
+            window.open('/admin/rapports/bulletin/' + etudiantId, '_blank');
+        }
+        
+        function downloadAttestation() {
+            const etudiantId = document.getElementById('etudiantAttestation').value;
+            if (!etudiantId) {
+                alert('Veuillez sélectionner un étudiant');
+                return;
+            }
+            window.open('/admin/rapports/attestation/' + etudiantId, '_blank');
+        }
+        
+        function downloadListeEtudiants() {
+            const coursId = document.getElementById('coursListe').value;
+            if (!coursId) {
+                alert('Veuillez sélectionner un cours');
+                return;
+            }
+            window.open('/admin/rapports/cours/' + coursId + '/etudiants', '_blank');
+        }
+        
+        function downloadReleveNotes() {
+            const coursId = document.getElementById('coursNotes').value;
+            if (!coursId) {
+                alert('Veuillez sélectionner un cours');
+                return;
+            }
+            window.open('/admin/rapports/cours/' + coursId + '/notes', '_blank');
+        }
+    </script>
+</div>
+
+</body>
+</html>

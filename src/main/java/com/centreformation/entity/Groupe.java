@@ -1,5 +1,7 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -29,21 +31,26 @@ public class Groupe {
 
     @ManyToOne
     @JoinColumn(name = "session_pedagogique_id")
+    @JsonIgnoreProperties({"groupes"})
     private SessionPedagogique sessionPedagogique;
 
     @ManyToOne
     @JoinColumn(name = "specialite_id")
+    @JsonIgnoreProperties({"groupes", "etudiants", "formateurs"})
     private Specialite specialite;
 
     @ManyToMany(mappedBy = "groupes")
     @Builder.Default
+    @JsonIgnore
     private Set<Etudiant> etudiants = new HashSet<>();
 
     @ManyToMany(mappedBy = "groupes")
     @Builder.Default
+    @JsonIgnore
     private Set<Cours> cours = new HashSet<>();
 
     @OneToMany(mappedBy = "groupe", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnore
     private Set<SeanceCours> seances = new HashSet<>();
 }

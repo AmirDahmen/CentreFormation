@@ -23,4 +23,9 @@ public interface SessionPedagogiqueService {
     void deleteById(Long id);
 
     long count();
+
+    /**
+     * Récupère la session pédagogique en cours
+     */
+    SessionPedagogique findCurrentSession();
 }

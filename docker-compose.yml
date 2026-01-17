@@ -1,0 +1,111 @@
+# ===========================================
+# Docker Compose - Centre de Formation
+# ===========================================
+# Usage:
+#   Démarrer:  docker-compose up -d
+#   Arrêter:   docker-compose down
+#   Logs:      docker-compose logs -f
+#   Rebuild:   docker-compose up -d --build
+# ===========================================
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # Base de données MySQL
+  # ===========================================
+  mysql:
+    image: mysql:8.0
+    container_name: centre-formation-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: centre_formation
+      MYSQL_USER: centre_user
+      MYSQL_PASSWORD: centre_pass
+    ports:
+      - "3307:3306"  # Port 3307 pour éviter conflit avec MySQL local
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - centre-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================
+  # Application Spring Boot
+  # ===========================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: centre-formation-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Profil Spring
+      SPRING_PROFILES_ACTIVE: prod
+      # Configuration base de données
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/centre_formation?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: centre_user
+      SPRING_DATASOURCE_PASSWORD: centre_pass
+      # Configuration JPA
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "false"
+      # Configuration JWT
+      JWT_SECRET: VotreCleSecreteTresLonguePourLaProductionDocker2024!@#$%
+      JWT_EXPIRATION: 86400000
+      # Configuration Email (optionnel - à configurer)
+      # SPRING_MAIL_HOST: smtp.gmail.com
+      # SPRING_MAIL_PORT: 587
+      # SPRING_MAIL_USERNAME: your-email@gmail.com
+      # SPRING_MAIL_PASSWORD: your-app-password
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - centre-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  # ===========================================
+  # phpMyAdmin (optionnel - pour administrer la BDD)
+  # ===========================================
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: centre-formation-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - mysql
+    networks:
+      - centre-network
+
+# ===========================================
+# Volumes persistants
+# ===========================================
+volumes:
+  mysql_data:
+    driver: local
+
+# ===========================================
+# Réseau
+# ===========================================
+networks:
+  centre-network:
+    driver: bridge

@@ -63,6 +63,16 @@ public class GroupeServiceImpl implements GroupeService {
     }
 
     @Override
+    public List<Groupe> findBySessionPedagogique(Long sessionId) {
+        return groupeRepository.findBySessionPedagogiqueId(sessionId, Pageable.unpaged()).getContent();
+    }
+
+    @Override
+    public List<Groupe> findBySpecialite(Long specialiteId) {
+        return groupeRepository.findBySpecialiteId(specialiteId, Pageable.unpaged()).getContent();
+    }
+
+    @Override
     public Page<Groupe> findBySessionPedagogiqueId(Long sessionId, Pageable pageable) {
         return groupeRepository.findBySessionPedagogiqueId(sessionId, pageable);
     }

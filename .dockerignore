@@ -1,0 +1,45 @@
+# ===========================================
+# Docker Ignore - Centre de Formation
+# ===========================================
+
+# Dossiers de build
+target/
+!target/*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+.mvn/
+
+# Node (si frontend intégré)
+node_modules/
+frontend/node_modules/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Tests
+src/test/
+
+# Fichiers temporaires
+*.tmp
+*.bak
+*.swp

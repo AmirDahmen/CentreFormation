@@ -1,5 +1,6 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -40,13 +41,16 @@ public class SeanceCours {
 
     @ManyToOne
     @JoinColumn(name = "cours_id", nullable = false)
+    @JsonIgnoreProperties({"inscriptions", "notes", "groupes", "seances"})
     private Cours cours;
 
     @ManyToOne
     @JoinColumn(name = "groupe_id")
+    @JsonIgnoreProperties({"etudiants", "cours", "seances", "sessionPedagogique", "specialite"})
     private Groupe groupe;
 
     @ManyToOne
     @JoinColumn(name = "formateur_id")
+    @JsonIgnoreProperties({"cours", "seances", "utilisateur", "specialite"})
     private Formateur formateur;
 }

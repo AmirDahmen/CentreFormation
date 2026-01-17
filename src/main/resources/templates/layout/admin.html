@@ -646,6 +646,17 @@
                 </li>
             </ul>
         </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">Rapports</div>
+            <ul class="sidebar-nav">
+                <li>
+                    <a class="nav-link" th:href="@{/admin/rapports}" th:classappend="${activePage == 'rapports'} ? 'active' : ''">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger"></i> Rapports PDF
+                    </a>
+                </li>
+            </ul>
+        </div>
     </nav>
 
     <!-- Main content -->

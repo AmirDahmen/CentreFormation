@@ -23,6 +23,10 @@ public interface GroupeService {
 
     List<Groupe> findBySpecialite(Specialite specialite);
 
+    List<Groupe> findBySessionPedagogique(Long sessionId);
+
+    List<Groupe> findBySpecialite(Long specialiteId);
+
     Page<Groupe> findBySessionPedagogiqueId(Long sessionId, Pageable pageable);
 
     Page<Groupe> findBySpecialiteId(Long specialiteId, Pageable pageable);

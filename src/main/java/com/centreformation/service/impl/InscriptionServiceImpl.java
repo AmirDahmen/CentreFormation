@@ -2,12 +2,15 @@ package com.centreformation.service.impl;
 
 import com.centreformation.entity.Cours;
 import com.centreformation.entity.Etudiant;
+import com.centreformation.entity.Formateur;
 import com.centreformation.entity.Inscription;
 import com.centreformation.repository.CoursRepository;
 import com.centreformation.repository.EtudiantRepository;
 import com.centreformation.repository.InscriptionRepository;
+import com.centreformation.service.EmailService;
 import com.centreformation.service.InscriptionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,11 +22,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class InscriptionServiceImpl implements InscriptionService {
 
     private final InscriptionRepository inscriptionRepository;
     private final EtudiantRepository etudiantRepository;
     private final CoursRepository coursRepository;
+    private final EmailService emailService;
 
     @Override
     public List<Inscription> findAll() {
@@ -85,7 +90,45 @@ public class InscriptionServiceImpl implements InscriptionService {
                 .statut(Inscription.StatutInscription.ACTIVE)
                 .build();
         
-        return inscriptionRepository.save(inscription);
+        Inscription savedInscription = inscriptionRepository.save(inscription);
+        
+        // Envoyer les notifications par email
+        sendInscriptionNotifications(etudiant, cours);
+        
+        return savedInscription;
+    }
+    
+    /**
+     * Envoie les notifications d'inscription à l'étudiant et au formateur
+     */
+    private void sendInscriptionNotifications(Etudiant etudiant, Cours cours) {
+        try {
+            String studentName = etudiant.getPrenom() + " " + etudiant.getNom();
+            Formateur formateur = cours.getFormateur();
+            String formateurName = formateur != null ? formateur.getPrenom() + " " + formateur.getNom() : "Non assigné";
+            
+            // Notifier l'étudiant
+            if (etudiant.getEmail() != null && !etudiant.getEmail().isEmpty()) {
+                emailService.notifyStudentInscription(
+                    etudiant.getEmail(),
+                    studentName,
+                    cours.getTitre(),
+                    formateurName
+                );
+            }
+            
+            // Notifier le formateur
+            if (formateur != null && formateur.getEmail() != null && !formateur.getEmail().isEmpty()) {
+                emailService.notifyFormateurNewInscription(
+                    formateur.getEmail(),
+                    formateurName,
+                    studentName,
+                    cours.getTitre()
+                );
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de l'envoi des notifications d'inscription: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -112,6 +155,41 @@ public class InscriptionServiceImpl implements InscriptionService {
         Inscription inscription = findById(inscriptionId);
         inscription.setStatut(Inscription.StatutInscription.ANNULEE);
         inscriptionRepository.save(inscription);
+        
+        // Envoyer les notifications de désinscription
+        sendDesinscriptionNotifications(inscription.getEtudiant(), inscription.getCours());
+    }
+    
+    /**
+     * Envoie les notifications de désinscription à l'étudiant et au formateur
+     */
+    private void sendDesinscriptionNotifications(Etudiant etudiant, Cours cours) {
+        try {
+            String studentName = etudiant.getPrenom() + " " + etudiant.getNom();
+            Formateur formateur = cours.getFormateur();
+            
+            // Notifier l'étudiant
+            if (etudiant.getEmail() != null && !etudiant.getEmail().isEmpty()) {
+                emailService.notifyStudentDesinscription(
+                    etudiant.getEmail(),
+                    studentName,
+                    cours.getTitre()
+                );
+            }
+            
+            // Notifier le formateur
+            if (formateur != null && formateur.getEmail() != null && !formateur.getEmail().isEmpty()) {
+                String formateurName = formateur.getPrenom() + " " + formateur.getNom();
+                emailService.notifyFormateurDesinscription(
+                    formateur.getEmail(),
+                    formateurName,
+                    studentName,
+                    cours.getTitre()
+                );
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de l'envoi des notifications de désinscription: {}", e.getMessage());
+        }
     }
 
     @Override

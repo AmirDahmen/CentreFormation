@@ -1,5 +1,6 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -36,13 +37,16 @@ public class Note {
 
     @ManyToOne
     @JoinColumn(name = "etudiant_id", nullable = false)
+    @JsonIgnoreProperties({"inscriptions", "notes", "groupes", "utilisateur"})
     private Etudiant etudiant;
 
     @ManyToOne
     @JoinColumn(name = "cours_id", nullable = false)
+    @JsonIgnoreProperties({"inscriptions", "notes", "groupes", "seances"})
     private Cours cours;
 
     @ManyToOne
     @JoinColumn(name = "formateur_id")
+    @JsonIgnoreProperties({"cours", "seances", "utilisateur"})
     private Formateur formateur;
 }

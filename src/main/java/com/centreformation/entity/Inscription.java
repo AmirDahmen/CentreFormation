@@ -1,5 +1,6 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -31,10 +32,12 @@ public class Inscription {
 
     @ManyToOne
     @JoinColumn(name = "etudiant_id", nullable = false)
+    @JsonIgnoreProperties({"inscriptions", "notes", "groupes", "utilisateur"})
     private Etudiant etudiant;
 
     @ManyToOne
     @JoinColumn(name = "cours_id", nullable = false)
+    @JsonIgnoreProperties({"inscriptions", "notes", "groupes", "seances"})
     private Cours cours;
 
     public enum StatutInscription {

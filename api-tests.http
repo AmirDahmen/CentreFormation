@@ -1,0 +1,407 @@
+### ==============================================
+### Centre Formation API - Tests REST Client
+### ==============================================
+### Variables (à remplacer après login)
+@baseUrl = http://localhost:8080/api
+@accessToken = VOTRE_TOKEN_ICI
+
+### ==============================================
+### 🔐 AUTHENTIFICATION
+### ==============================================
+
+### 1. Login Admin (COPIER accessToken de la réponse)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### 2. Login Formateur
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "formateur",
+  "password": "form123"
+}
+
+### 3. Login Étudiant
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "etudiant",
+  "password": "etud123"
+}
+
+### 4. Inscription nouvel utilisateur
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "test123",
+  "confirmPassword": "test123"
+}
+
+### 5. Infos utilisateur connecté
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 👨‍🎓 ÉTUDIANTS (ADMIN/FORMATEUR requis)
+### ==============================================
+
+### Liste des étudiants (paginé)
+GET {{baseUrl}}/etudiants?page=0&size=10&sortBy=nom&direction=asc
+Authorization: Bearer {{accessToken}}
+
+### Rechercher étudiants
+GET {{baseUrl}}/etudiants/search?keyword=dupont
+Authorization: Bearer {{accessToken}}
+
+### Détail d'un étudiant
+GET {{baseUrl}}/etudiants/1
+Authorization: Bearer {{accessToken}}
+
+### Créer un étudiant (ADMIN only)
+POST {{baseUrl}}/etudiants
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "matricule": "ETU2026001",
+  "nom": "Dupont",
+  "prenom": "Jean",
+  "email": "jean.dupont@email.com",
+  "dateInscription": "2026-01-13"
+}
+
+### Modifier un étudiant (ADMIN only)
+PUT {{baseUrl}}/etudiants/1
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "matricule": "ETU2026001",
+  "nom": "Dupont",
+  "prenom": "Jean-Pierre",
+  "email": "jp.dupont@email.com"
+}
+
+### Supprimer un étudiant (ADMIN only)
+DELETE {{baseUrl}}/etudiants/1
+Authorization: Bearer {{accessToken}}
+
+### Notes d'un étudiant
+GET {{baseUrl}}/etudiants/1/notes
+Authorization: Bearer {{accessToken}}
+
+### Moyenne d'un étudiant
+GET {{baseUrl}}/etudiants/1/moyenne
+Authorization: Bearer {{accessToken}}
+
+### Inscriptions d'un étudiant
+GET {{baseUrl}}/etudiants/1/inscriptions
+Authorization: Bearer {{accessToken}}
+
+### Ajouter étudiant à un groupe
+PUT {{baseUrl}}/etudiants/1/groupes/1
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 👨‍🏫 FORMATEURS (ADMIN/FORMATEUR requis)
+### ==============================================
+
+### Liste des formateurs
+GET {{baseUrl}}/formateurs?page=0&size=10
+Authorization: Bearer {{accessToken}}
+
+### Tous les formateurs (pour select)
+GET {{baseUrl}}/formateurs/all
+Authorization: Bearer {{accessToken}}
+
+### Créer un formateur (ADMIN only)
+POST {{baseUrl}}/formateurs
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "nom": "Martin",
+  "prenom": "Sophie",
+  "email": "sophie.martin@formation.com",
+  "telephone": "0612345678"
+}
+
+### Cours d'un formateur
+GET {{baseUrl}}/formateurs/1/cours
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 📚 COURS (Accessible à tous les rôles)
+### ==============================================
+
+### Liste des cours (paginé)
+GET {{baseUrl}}/cours?page=0&size=10
+Authorization: Bearer {{accessToken}}
+
+### Tous les cours (pour select)
+GET {{baseUrl}}/cours/all
+Authorization: Bearer {{accessToken}}
+
+### Détail d'un cours
+GET {{baseUrl}}/cours/1
+Authorization: Bearer {{accessToken}}
+
+### Créer un cours (ADMIN only)
+POST {{baseUrl}}/cours
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "code": "INFO101",
+  "titre": "Introduction à la programmation",
+  "description": "Cours d'initiation aux bases de la programmation",
+  "nombreHeures": 30
+}
+
+### Taux de réussite d'un cours
+GET {{baseUrl}}/cours/1/taux-reussite
+Authorization: Bearer {{accessToken}}
+
+### Moyenne d'un cours
+GET {{baseUrl}}/cours/1/moyenne
+Authorization: Bearer {{accessToken}}
+
+### Notes d'un cours
+GET {{baseUrl}}/cours/1/notes
+Authorization: Bearer {{accessToken}}
+
+### Ajouter groupe à un cours
+PUT {{baseUrl}}/cours/1/groupes/1
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 📝 INSCRIPTIONS
+### ==============================================
+
+### Liste des inscriptions
+GET {{baseUrl}}/inscriptions?page=0&size=10
+Authorization: Bearer {{accessToken}}
+
+### Inscrire un étudiant à un cours
+POST {{baseUrl}}/inscriptions/inscrire
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "etudiantId": 1,
+  "coursId": 1
+}
+
+### Annuler une inscription
+PUT {{baseUrl}}/inscriptions/1/annuler
+Authorization: Bearer {{accessToken}}
+
+### Inscriptions par statut
+GET {{baseUrl}}/inscriptions/statut/ACTIVE
+Authorization: Bearer {{accessToken}}
+
+### Stats inscriptions
+GET {{baseUrl}}/inscriptions/count
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 📊 NOTES
+### ==============================================
+
+### Liste des notes
+GET {{baseUrl}}/notes?page=0&size=10
+Authorization: Bearer {{accessToken}}
+
+### Saisir une note
+POST {{baseUrl}}/notes/saisir
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "etudiantId": 1,
+  "coursId": 1,
+  "valeur": 15.5,
+  "commentaire": "Bon travail",
+  "formateurId": 1
+}
+
+### Modifier une note
+PUT {{baseUrl}}/notes/1
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "valeur": 16.0,
+  "commentaire": "Très bon travail"
+}
+
+### Moyenne par étudiant
+GET {{baseUrl}}/notes/moyenne/etudiant/1
+Authorization: Bearer {{accessToken}}
+
+### Moyenne par cours
+GET {{baseUrl}}/notes/moyenne/cours/1
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 👥 GROUPES
+### ==============================================
+
+### Liste des groupes
+GET {{baseUrl}}/groupes?page=0&size=10
+Authorization: Bearer {{accessToken}}
+
+### Tous les groupes (pour select)
+GET {{baseUrl}}/groupes/all
+Authorization: Bearer {{accessToken}}
+
+### Créer un groupe (ADMIN only)
+POST {{baseUrl}}/groupes
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "nom": "Groupe TP1",
+  "code": "TP1-2026"
+}
+
+### Groupes par spécialité
+GET {{baseUrl}}/groupes/specialite/1
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 🎓 SPÉCIALITÉS
+### ==============================================
+
+### Liste des spécialités
+GET {{baseUrl}}/specialites/all
+Authorization: Bearer {{accessToken}}
+
+### Créer une spécialité (ADMIN only)
+POST {{baseUrl}}/specialites
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "nom": "Intelligence Artificielle",
+  "description": "Spécialité en IA et Machine Learning"
+}
+
+### ==============================================
+### 📅 SESSIONS PÉDAGOGIQUES
+### ==============================================
+
+### Liste des sessions
+GET {{baseUrl}}/sessions/all
+Authorization: Bearer {{accessToken}}
+
+### Créer une session (ADMIN only)
+POST {{baseUrl}}/sessions
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "anneeScolaire": "2025-2026",
+  "semestre": "S2",
+  "dateDebut": "2026-01-15",
+  "dateFin": "2026-06-30"
+}
+
+### Session courante
+GET {{baseUrl}}/sessions/current
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 🕐 SÉANCES DE COURS / EMPLOI DU TEMPS
+### ==============================================
+
+### Liste des séances
+GET {{baseUrl}}/seances?page=0&size=10
+Authorization: Bearer {{accessToken}}
+
+### Créer une séance (vérifie les conflits!)
+POST {{baseUrl}}/seances
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "date": "2026-01-20",
+  "heureDebut": "08:30:00",
+  "heureFin": "10:30:00",
+  "salle": "A101",
+  "contenu": "Introduction au cours"
+}
+
+### Emploi du temps étudiant
+GET {{baseUrl}}/seances/emploi-temps/etudiant/1?debut=2026-01-13&fin=2026-01-19
+Authorization: Bearer {{accessToken}}
+
+### Emploi du temps formateur
+GET {{baseUrl}}/seances/emploi-temps/formateur/1?debut=2026-01-13&fin=2026-01-19
+Authorization: Bearer {{accessToken}}
+
+### ⚠️ Vérifier conflit d'horaire
+GET {{baseUrl}}/seances/check-conflit?formateurId=1&date=2026-01-20&heureDebut=09:00:00&heureFin=11:00:00
+Authorization: Bearer {{accessToken}}
+
+### Séances par date
+GET {{baseUrl}}/seances/date/2026-01-20
+Authorization: Bearer {{accessToken}}
+
+### Séances d'une période
+GET {{baseUrl}}/seances/periode?debut=2026-01-15&fin=2026-01-30
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 📈 STATISTIQUES / DASHBOARD
+### ==============================================
+
+### Dashboard général
+GET {{baseUrl}}/stats/dashboard
+Authorization: Bearer {{accessToken}}
+
+### Cours les plus populaires
+GET {{baseUrl}}/stats/cours-populaires?limit=10
+Authorization: Bearer {{accessToken}}
+
+### Taux de réussite global
+GET {{baseUrl}}/stats/taux-reussite
+Authorization: Bearer {{accessToken}}
+
+### Stats inscriptions
+GET {{baseUrl}}/stats/inscriptions
+Authorization: Bearer {{accessToken}}
+
+### Stats notes (distribution)
+GET {{baseUrl}}/stats/notes
+Authorization: Bearer {{accessToken}}
+
+### Stats d'un étudiant
+GET {{baseUrl}}/stats/etudiant/1
+Authorization: Bearer {{accessToken}}
+
+### Stats d'un formateur
+GET {{baseUrl}}/stats/formateur/1
+Authorization: Bearer {{accessToken}}
+
+### ==============================================
+### 🚫 TESTS D'ACCÈS REFUSÉ (sans token)
+### ==============================================
+
+### Test sans token (doit retourner 401)
+GET {{baseUrl}}/etudiants
+
+### Test endpoint admin avec token étudiant (doit retourner 403)
+# D'abord se connecter avec étudiant, puis utiliser ce token ici
+# DELETE {{baseUrl}}/etudiants/1
+# Authorization: Bearer TOKEN_ETUDIANT

@@ -1,5 +1,7 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -46,6 +48,7 @@ public class Etudiant {
 
     @ManyToOne
     @JoinColumn(name = "specialite_id")
+    @JsonIgnoreProperties({"groupes", "etudiants", "formateurs"})
     private Specialite specialite;
 
     @ManyToMany
@@ -55,17 +58,21 @@ public class Etudiant {
         inverseJoinColumns = @JoinColumn(name = "groupe_id")
     )
     @Builder.Default
+    @JsonIgnore
     private Set<Groupe> groupes = new HashSet<>();
 
     @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonIgnore
     private Set<Inscription> inscriptions = new HashSet<>();
 
     @OneToMany(mappedBy = "etudiant", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonIgnore
     private Set<Note> notes = new HashSet<>();
 
     @OneToOne
     @JoinColumn(name = "utilisateur_id", unique = true)
+    @JsonIgnore
     private Utilisateur utilisateur;
 }

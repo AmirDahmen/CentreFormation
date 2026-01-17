@@ -1,5 +1,6 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -29,13 +30,16 @@ public class Specialite {
 
     @OneToMany(mappedBy = "specialite", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnore
     private Set<Groupe> groupes = new HashSet<>();
 
     @OneToMany(mappedBy = "specialite")
     @Builder.Default
+    @JsonIgnore
     private Set<Etudiant> etudiants = new HashSet<>();
 
     @OneToMany(mappedBy = "specialite")
     @Builder.Default
+    @JsonIgnore
     private Set<Formateur> formateurs = new HashSet<>();
 }

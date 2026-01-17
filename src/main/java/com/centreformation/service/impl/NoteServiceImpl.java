@@ -8,8 +8,10 @@ import com.centreformation.repository.CoursRepository;
 import com.centreformation.repository.EtudiantRepository;
 import com.centreformation.repository.FormateurRepository;
 import com.centreformation.repository.NoteRepository;
+import com.centreformation.service.EmailService;
 import com.centreformation.service.NoteService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,12 +23,14 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class NoteServiceImpl implements NoteService {
 
     private final NoteRepository noteRepository;
     private final EtudiantRepository etudiantRepository;
     private final CoursRepository coursRepository;
     private final FormateurRepository formateurRepository;
+    private final EmailService emailService;
 
     @Override
     public List<Note> findAll() {
@@ -121,13 +125,14 @@ public class NoteServiceImpl implements NoteService {
         // Vérifier si une note existe déjà
         Note existingNote = noteRepository.findByEtudiantAndCours(etudiant, cours).orElse(null);
         
+        Note savedNote;
         if (existingNote != null) {
             // Mettre à jour la note existante
             existingNote.setValeur(valeur);
             existingNote.setCommentaire(commentaire);
             existingNote.setDateSaisie(LocalDateTime.now());
             existingNote.setFormateur(formateur);
-            return noteRepository.save(existingNote);
+            savedNote = noteRepository.save(existingNote);
         } else {
             // Créer une nouvelle note
             Note note = Note.builder()
@@ -138,7 +143,32 @@ public class NoteServiceImpl implements NoteService {
                     .dateSaisie(LocalDateTime.now())
                     .formateur(formateur)
                     .build();
-            return noteRepository.save(note);
+            savedNote = noteRepository.save(note);
+        }
+        
+        // Envoyer la notification à l'étudiant
+        sendNoteNotification(etudiant, cours, valeur, commentaire);
+        
+        return savedNote;
+    }
+    
+    /**
+     * Envoie une notification à l'étudiant pour une nouvelle note
+     */
+    private void sendNoteNotification(Etudiant etudiant, Cours cours, Double valeur, String commentaire) {
+        try {
+            if (etudiant.getEmail() != null && !etudiant.getEmail().isEmpty()) {
+                String studentName = etudiant.getPrenom() + " " + etudiant.getNom();
+                emailService.notifyStudentNewNote(
+                    etudiant.getEmail(),
+                    studentName,
+                    cours.getTitre(),
+                    valeur,
+                    commentaire
+                );
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de l'envoi de la notification de note: {}", e.getMessage());
         }
     }
 
@@ -163,5 +193,39 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public long count() {
         return noteRepository.count();
+    }
+    
+    // ========== Méthodes pour les rapports PDF ==========
+    
+    @Override
+    public List<Note> findByEtudiantId(Long etudiantId) {
+        return findByEtudiant(etudiantId);
+    }
+    
+    @Override
+    public List<Note> findByCoursId(Long coursId) {
+        return findByCours(coursId);
+    }
+    
+    @Override
+    public Double getMoyenneByEtudiant(Long etudiantId) {
+        return calculateAverageByEtudiant(etudiantId);
+    }
+    
+    @Override
+    public Double getMoyenneByCours(Long coursId) {
+        return calculateAverageByCours(coursId);
+    }
+    
+    @Override
+    public Double getTauxReussiteByCours(Long coursId) {
+        List<Note> notes = findByCours(coursId);
+        if (notes.isEmpty()) {
+            return null;
+        }
+        long reussites = notes.stream()
+                .filter(n -> n.getValeur() >= 10)
+                .count();
+        return (reussites * 100.0) / notes.size();
     }
 }

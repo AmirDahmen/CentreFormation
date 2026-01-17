@@ -36,4 +36,15 @@ public interface NoteService {
     Double calculateAverageByCours(Long coursId);
 
     long count();
+    
+    // Méthodes ajoutées pour les rapports PDF
+    List<Note> findByEtudiantId(Long etudiantId);
+    
+    List<Note> findByCoursId(Long coursId);
+    
+    Double getMoyenneByEtudiant(Long etudiantId);
+    
+    Double getMoyenneByCours(Long coursId);
+    
+    Double getTauxReussiteByCours(Long coursId);
 }

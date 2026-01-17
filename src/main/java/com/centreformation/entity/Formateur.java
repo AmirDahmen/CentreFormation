@@ -1,5 +1,7 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -39,17 +41,21 @@ public class Formateur {
 
     @ManyToOne
     @JoinColumn(name = "specialite_id")
+    @JsonIgnoreProperties({"groupes", "etudiants", "formateurs"})
     private Specialite specialite;
 
     @OneToMany(mappedBy = "formateur", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnore
     private Set<Cours> cours = new HashSet<>();
 
     @OneToMany(mappedBy = "formateur", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnore
     private Set<SeanceCours> seances = new HashSet<>();
 
     @OneToOne
     @JoinColumn(name = "utilisateur_id", unique = true)
+    @JsonIgnore
     private Utilisateur utilisateur;
 }

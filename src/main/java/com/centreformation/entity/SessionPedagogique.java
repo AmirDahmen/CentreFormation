@@ -1,5 +1,6 @@
 package com.centreformation.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -36,5 +37,6 @@ public class SessionPedagogique {
 
     @OneToMany(mappedBy = "sessionPedagogique", cascade = CascadeType.ALL)
     @Builder.Default
+    @JsonIgnore
     private Set<Groupe> groupes = new HashSet<>();
 }

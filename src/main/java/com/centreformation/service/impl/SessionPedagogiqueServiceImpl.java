@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -82,5 +83,15 @@ public class SessionPedagogiqueServiceImpl implements SessionPedagogiqueService 
     @Override
     public long count() {
         return sessionRepository.count();
+    }
+
+    @Override
+    public SessionPedagogique findCurrentSession() {
+        LocalDate today = LocalDate.now();
+        return sessionRepository.findAll().stream()
+                .filter(s -> s.getDateDebut() != null && s.getDateFin() != null)
+                .filter(s -> !today.isBefore(s.getDateDebut()) && !today.isAfter(s.getDateFin()))
+                .findFirst()
+                .orElse(null);
     }
 }
