@@ -125,8 +125,9 @@ public class GroupeServiceImpl implements GroupeService {
         Etudiant etudiant = etudiantRepository.findById(etudiantId)
                 .orElseThrow(() -> new RuntimeException("Étudiant non trouvé"));
         
-        groupe.getEtudiants().add(etudiant);
-        groupeRepository.save(groupe);
+        // La relation est gérée par Etudiant (propriétaire de la relation)
+        etudiant.getGroupes().add(groupe);
+        etudiantRepository.save(etudiant);
     }
 
     @Override
@@ -135,25 +136,34 @@ public class GroupeServiceImpl implements GroupeService {
         Etudiant etudiant = etudiantRepository.findById(etudiantId)
                 .orElseThrow(() -> new RuntimeException("Étudiant non trouvé"));
         
-        groupe.getEtudiants().remove(etudiant);
-        groupeRepository.save(groupe);
+        // La relation est gérée par Etudiant (propriétaire de la relation)
+        etudiant.getGroupes().remove(groupe);
+        etudiantRepository.save(etudiant);
     }
 
     @Override
     public void setEtudiants(Long groupeId, Set<Long> etudiantIds) {
         Groupe groupe = findById(groupeId);
         
-        // Effacer les étudiants existants
-        groupe.getEtudiants().clear();
-        groupeRepository.flush();
+        // Récupérer tous les étudiants actuellement dans ce groupe
+        List<Etudiant> etudiantsActuels = etudiantRepository.findAll().stream()
+                .filter(e -> e.getGroupes().contains(groupe))
+                .toList();
         
-        // Ajouter les nouveaux étudiants
-        if (etudiantIds != null && !etudiantIds.isEmpty()) {
-            Set<Etudiant> nouveauxEtudiants = new HashSet<>(etudiantRepository.findAllById(etudiantIds));
-            groupe.getEtudiants().addAll(nouveauxEtudiants);
+        // Retirer le groupe de tous les étudiants actuels
+        for (Etudiant etudiant : etudiantsActuels) {
+            etudiant.getGroupes().remove(groupe);
+            etudiantRepository.save(etudiant);
         }
         
-        groupeRepository.save(groupe);
+        // Ajouter le groupe aux nouveaux étudiants
+        if (etudiantIds != null && !etudiantIds.isEmpty()) {
+            List<Etudiant> nouveauxEtudiants = etudiantRepository.findAllById(etudiantIds);
+            for (Etudiant etudiant : nouveauxEtudiants) {
+                etudiant.getGroupes().add(groupe);
+                etudiantRepository.save(etudiant);
+            }
+        }
     }
 
     @Override
@@ -162,8 +172,9 @@ public class GroupeServiceImpl implements GroupeService {
         Cours cours = coursRepository.findById(coursId)
                 .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
         
-        groupe.getCours().add(cours);
-        groupeRepository.save(groupe);
+        // La relation est gérée par Cours (propriétaire de la relation)
+        cours.getGroupes().add(groupe);
+        coursRepository.save(cours);
     }
 
     @Override
@@ -172,25 +183,34 @@ public class GroupeServiceImpl implements GroupeService {
         Cours cours = coursRepository.findById(coursId)
                 .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
         
-        groupe.getCours().remove(cours);
-        groupeRepository.save(groupe);
+        // La relation est gérée par Cours (propriétaire de la relation)
+        cours.getGroupes().remove(groupe);
+        coursRepository.save(cours);
     }
 
     @Override
     public void setCours(Long groupeId, Set<Long> coursIds) {
         Groupe groupe = findById(groupeId);
         
-        // Effacer les cours existants
-        groupe.getCours().clear();
-        groupeRepository.flush();
+        // Récupérer tous les cours actuellement associés à ce groupe
+        List<Cours> coursActuels = coursRepository.findAll().stream()
+                .filter(c -> c.getGroupes().contains(groupe))
+                .toList();
         
-        // Ajouter les nouveaux cours
-        if (coursIds != null && !coursIds.isEmpty()) {
-            Set<Cours> nouveauxCours = new HashSet<>(coursRepository.findAllById(coursIds));
-            groupe.getCours().addAll(nouveauxCours);
+        // Retirer le groupe de tous les cours actuels
+        for (Cours cours : coursActuels) {
+            cours.getGroupes().remove(groupe);
+            coursRepository.save(cours);
         }
         
-        groupeRepository.save(groupe);
+        // Ajouter le groupe aux nouveaux cours
+        if (coursIds != null && !coursIds.isEmpty()) {
+            List<Cours> nouveauxCours = coursRepository.findAllById(coursIds);
+            for (Cours cours : nouveauxCours) {
+                cours.getGroupes().add(groupe);
+                coursRepository.save(cours);
+            }
+        }
     }
 
     @Override

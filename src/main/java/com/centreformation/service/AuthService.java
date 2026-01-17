@@ -1,16 +1,10 @@
 package com.centreformation.service;
 
 import com.centreformation.dto.auth.*;
-import com.centreformation.entity.RefreshToken;
-import com.centreformation.entity.RevokedToken;
-import com.centreformation.entity.Role;
-import com.centreformation.entity.Utilisateur;
+import com.centreformation.entity.*;
 import com.centreformation.exception.AuthenticationException;
 import com.centreformation.exception.TokenRefreshException;
-import com.centreformation.repository.RefreshTokenRepository;
-import com.centreformation.repository.RevokedTokenRepository;
-import com.centreformation.repository.RoleRepository;
-import com.centreformation.repository.UtilisateurRepository;
+import com.centreformation.repository.*;
 import com.centreformation.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +32,8 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RevokedTokenRepository revokedTokenRepository;
+    private final EtudiantRepository etudiantRepository;
+    private final FormateurRepository formateurRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -105,15 +103,16 @@ public class AuthService {
             throw new AuthenticationException("Les mots de passe ne correspondent pas");
         }
 
-        // Récupérer ou créer le rôle ETUDIANT par défaut
-        Role roleEtudiant = roleRepository.findByNom("ETUDIANT")
+        // Déterminer le rôle selon le type d'utilisateur
+        String userType = request.getUserType().toUpperCase();
+        Role role = roleRepository.findByNom(userType)
                 .orElseGet(() -> {
-                    Role newRole = new Role("ETUDIANT");
+                    Role newRole = new Role(userType);
                     return roleRepository.save(newRole);
                 });
 
         Set<Role> roles = new HashSet<>();
-        roles.add(roleEtudiant);
+        roles.add(role);
 
         // Créer l'utilisateur
         Utilisateur utilisateur = Utilisateur.builder()
@@ -126,7 +125,37 @@ public class AuthService {
 
         utilisateurRepository.save(utilisateur);
 
-        log.info("Nouvel utilisateur enregistré: {}", request.getUsername());
+        // Créer l'entité Etudiant ou Formateur selon le type
+        if ("ETUDIANT".equals(userType)) {
+            // Générer un matricule unique
+            String matricule = generateMatricule();
+            
+            Etudiant etudiant = Etudiant.builder()
+                    .matricule(matricule)
+                    .nom(request.getNom())
+                    .prenom(request.getPrenom())
+                    .email(request.getEmail())
+                    .dateInscription(LocalDate.now())
+                    .utilisateur(utilisateur)
+                    .build();
+            
+            etudiantRepository.save(etudiant);
+            log.info("Nouvel étudiant enregistré: {} {} (matricule: {})", request.getPrenom(), request.getNom(), matricule);
+            
+        } else if ("FORMATEUR".equals(userType)) {
+            Formateur formateur = Formateur.builder()
+                    .nom(request.getNom())
+                    .prenom(request.getPrenom())
+                    .email(request.getEmail())
+                    .telephone(request.getTelephone())
+                    .utilisateur(utilisateur)
+                    .build();
+            
+            formateurRepository.save(formateur);
+            log.info("Nouveau formateur enregistré: {} {}", request.getPrenom(), request.getNom());
+        }
+
+        log.info("Nouvel utilisateur enregistré: {} (type: {})", request.getUsername(), userType);
 
         // Connecter automatiquement l'utilisateur après l'inscription
         LoginRequest loginRequest = LoginRequest.builder()
@@ -137,6 +166,15 @@ public class AuthService {
         AuthResponse response = login(loginRequest);
         response.setMessage("Inscription réussie");
         return response;
+    }
+
+    /**
+     * Génère un matricule unique pour un étudiant
+     */
+    private String generateMatricule() {
+        String year = String.valueOf(LocalDate.now().getYear());
+        String uuid = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        return "ETU-" + year + "-" + uuid;
     }
 
     /**

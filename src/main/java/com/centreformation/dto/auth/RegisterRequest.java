@@ -2,6 +2,7 @@ package com.centreformation.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,4 +29,16 @@ public class RegisterRequest {
 
     @NotBlank(message = "La confirmation du mot de passe est obligatoire")
     private String confirmPassword;
+
+    @NotBlank(message = "Le type d'utilisateur est obligatoire")
+    @Pattern(regexp = "ETUDIANT|FORMATEUR", message = "Le type doit être ETUDIANT ou FORMATEUR")
+    private String userType;
+
+    @NotBlank(message = "Le nom est obligatoire")
+    private String nom;
+
+    @NotBlank(message = "Le prénom est obligatoire")
+    private String prenom;
+
+    private String telephone; // Optionnel, pour les formateurs
 }

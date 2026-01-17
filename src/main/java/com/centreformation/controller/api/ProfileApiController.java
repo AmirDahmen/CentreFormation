@@ -3,9 +3,13 @@ package com.centreformation.controller.api;
 import com.centreformation.entity.Etudiant;
 import com.centreformation.entity.Formateur;
 import com.centreformation.entity.Utilisateur;
+import com.centreformation.entity.Cours;
+import com.centreformation.entity.Inscription;
+import com.centreformation.entity.Groupe;
 import com.centreformation.repository.EtudiantRepository;
 import com.centreformation.repository.FormateurRepository;
 import com.centreformation.repository.UtilisateurRepository;
+import com.centreformation.repository.InscriptionRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -19,7 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * API REST pour la gestion du profil utilisateur
@@ -37,6 +43,7 @@ public class ProfileApiController {
     private final UtilisateurRepository utilisateurRepository;
     private final EtudiantRepository etudiantRepository;
     private final FormateurRepository formateurRepository;
+    private final InscriptionRepository inscriptionRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -74,9 +81,20 @@ public class ProfileApiController {
         }
         
         // Ajouter les informations spécifiques selon le rôle
-        if (utilisateur.getEtudiantLie() != null) {
-            Etudiant etudiant = utilisateur.getEtudiantLie();
+        Etudiant etudiant = utilisateur.getEtudiantLie();
+        // Si pas d'étudiant lié directement, chercher par email
+        if (etudiant == null && hasRoleEtudiant) {
+            etudiant = etudiantRepository.findByEmail(utilisateur.getEmail()).orElse(null);
+            // Lier l'étudiant trouvé à l'utilisateur pour les prochaines fois
+            if (etudiant != null && etudiant.getUtilisateur() == null) {
+                etudiant.setUtilisateur(utilisateur);
+                etudiantRepository.save(etudiant);
+            }
+        }
+        
+        if (etudiant != null) {
             profile.put("type", "ETUDIANT");
+            profile.put("etudiantId", etudiant.getId());
             profile.put("nom", etudiant.getNom());
             profile.put("prenom", etudiant.getPrenom());
             profile.put("matricule", etudiant.getMatricule());
@@ -85,14 +103,90 @@ public class ProfileApiController {
             if (etudiant.getSpecialite() != null) {
                 profile.put("specialite", etudiant.getSpecialite().getNom());
             }
-        } else if (utilisateur.getFormateurLie() != null) {
+            
+            // Ajouter les inscriptions directes avec leurs cours
+            List<Inscription> inscriptions = inscriptionRepository.findByEtudiant(etudiant);
+            List<Map<String, Object>> inscriptionsData = inscriptions.stream()
+                .map(inscription -> {
+                    Map<String, Object> inscriptionMap = new HashMap<>();
+                    inscriptionMap.put("id", inscription.getId());
+                    inscriptionMap.put("dateInscription", inscription.getDateInscription());
+                    inscriptionMap.put("statut", inscription.getStatut() != null ? inscription.getStatut().name() : "EN_ATTENTE");
+                    
+                    if (inscription.getCours() != null) {
+                        Cours cours = inscription.getCours();
+                        Map<String, Object> coursMap = new HashMap<>();
+                        coursMap.put("id", cours.getId());
+                        coursMap.put("code", cours.getCode());
+                        coursMap.put("titre", cours.getTitre());
+                        coursMap.put("description", cours.getDescription());
+                        coursMap.put("duree", cours.getNombreHeures());
+                        if (cours.getFormateur() != null) {
+                            coursMap.put("formateur", cours.getFormateur().getPrenom() + " " + cours.getFormateur().getNom());
+                        }
+                        inscriptionMap.put("cours", coursMap);
+                    }
+                    return inscriptionMap;
+                })
+                .collect(Collectors.toList());
+            profile.put("inscriptions", inscriptionsData);
+            
+            // Ajouter les cours via les groupes de l'étudiant
+            List<Map<String, Object>> coursViaGroupes = new java.util.ArrayList<>();
+            for (Groupe groupe : etudiant.getGroupes()) {
+                for (Cours cours : groupe.getCours()) {
+                    Map<String, Object> coursMap = new HashMap<>();
+                    coursMap.put("id", cours.getId());
+                    coursMap.put("code", cours.getCode());
+                    coursMap.put("titre", cours.getTitre());
+                    coursMap.put("description", cours.getDescription());
+                    coursMap.put("duree", cours.getNombreHeures());
+                    coursMap.put("groupe", groupe.getNom());
+                    if (cours.getFormateur() != null) {
+                        coursMap.put("formateur", cours.getFormateur().getPrenom() + " " + cours.getFormateur().getNom());
+                    }
+                    coursViaGroupes.add(coursMap);
+                }
+            }
+            profile.put("coursViaGroupes", coursViaGroupes);
+            
+        } else if (hasRoleFormateur) {
             Formateur formateur = utilisateur.getFormateurLie();
-            profile.put("type", "FORMATEUR");
-            profile.put("nom", formateur.getNom());
-            profile.put("prenom", formateur.getPrenom());
-            profile.put("telephone", formateur.getTelephone());
-            if (formateur.getSpecialite() != null) {
-                profile.put("specialite", formateur.getSpecialite().getNom());
+            // Si pas de formateur lié directement, chercher par email
+            if (formateur == null) {
+                formateur = formateurRepository.findByEmail(utilisateur.getEmail()).orElse(null);
+                // Lier le formateur trouvé à l'utilisateur pour les prochaines fois
+                if (formateur != null && formateur.getUtilisateur() == null) {
+                    formateur.setUtilisateur(utilisateur);
+                    formateurRepository.save(formateur);
+                }
+            }
+            
+            if (formateur != null) {
+                profile.put("type", "FORMATEUR");
+                profile.put("formateurId", formateur.getId());
+                profile.put("nom", formateur.getNom());
+                profile.put("prenom", formateur.getPrenom());
+                profile.put("telephone", formateur.getTelephone());
+                if (formateur.getSpecialite() != null) {
+                    profile.put("specialite", formateur.getSpecialite().getNom());
+                }
+                
+                // Ajouter les cours dispensés par le formateur
+                List<Map<String, Object>> coursDispenses = formateur.getCours().stream()
+                    .map(cours -> {
+                        Map<String, Object> coursMap = new HashMap<>();
+                        coursMap.put("id", cours.getId());
+                        coursMap.put("code", cours.getCode());
+                        coursMap.put("titre", cours.getTitre());
+                        coursMap.put("description", cours.getDescription());
+                        coursMap.put("duree", cours.getNombreHeures());
+                        return coursMap;
+                    })
+                    .collect(Collectors.toList());
+                profile.put("coursDispenses", coursDispenses);
+            } else {
+                profile.put("type", userType);
             }
         } else {
             // Utiliser le type basé sur le rôle
