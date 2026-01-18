@@ -1,5 +1,6 @@
 package com.centreformation.controller.admin;
 
+import com.centreformation.entity.Inscription;
 import com.centreformation.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -32,6 +33,10 @@ public class AdminController {
         model.addAttribute("totalGroupes", groupeService.count());
         model.addAttribute("totalSpecialites", specialiteService.count());
         model.addAttribute("totalSessions", sessionService.count());
+        
+        // Inscriptions en attente de validation
+        model.addAttribute("inscriptionsEnAttente", 
+            inscriptionService.countByStatut(Inscription.StatutInscription.EN_ATTENTE));
         
         model.addAttribute("activePage", "dashboard");
         

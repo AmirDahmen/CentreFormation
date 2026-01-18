@@ -20,6 +20,17 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     
     List<Note> findByCours(Cours cours);
     
+    /**
+     * Récupère les notes par cours avec fetch des relations pour éviter lazy loading
+     */
+    @Query("SELECT n FROM Note n " +
+           "LEFT JOIN FETCH n.etudiant e " +
+           "LEFT JOIN FETCH e.specialite " +
+           "LEFT JOIN FETCH n.cours c " +
+           "LEFT JOIN FETCH c.formateur " +
+           "WHERE c.id = :coursId")
+    List<Note> findByCoursIdWithDetails(@Param("coursId") Long coursId);
+    
     Optional<Note> findByEtudiantAndCours(Etudiant etudiant, Cours cours);
     
     boolean existsByEtudiantAndCours(Etudiant etudiant, Cours cours);

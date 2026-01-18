@@ -123,9 +123,19 @@ public class NoteController {
         List<Inscription> inscriptions = inscriptionService.findByCours(coursId);
         List<Note> notes = noteService.findByCours(coursId);
         
+        // Créer une map des notes par etudiantId pour simplifier le template
+        Map<Long, Note> notesParEtudiant = notes.stream()
+            .filter(n -> n.getEtudiant() != null)
+            .collect(Collectors.toMap(
+                n -> n.getEtudiant().getId(),
+                n -> n,
+                (n1, n2) -> n1  // En cas de doublon, garder le premier
+            ));
+        
         model.addAttribute("cours", cours);
         model.addAttribute("inscriptions", inscriptions);
         model.addAttribute("notes", notes);
+        model.addAttribute("notesParEtudiant", notesParEtudiant);
         model.addAttribute("activePage", "notes");
         
         return "admin/notes/saisir-cours";

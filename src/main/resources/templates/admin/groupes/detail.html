@@ -47,15 +47,19 @@
                         <span class="fw-semibold" th:text="${groupe.nom}"></span>
                     </div>
                     <div class="mb-3">
-                        <label class="small text-muted d-block">Spécialité</label>
-                        <span class="badge bg-info" th:if="${groupe.specialite}" th:text="${groupe.specialite.nom}"></span>
-                        <span class="text-muted" th:unless="${groupe.specialite}">Non définie</span>
+                        <label class="small text-muted d-block">Cours</label>
+                        <span class="badge bg-success" th:if="${groupe.cours}" th:text="${groupe.cours.titre}"></span>
+                        <span class="text-muted" th:unless="${groupe.cours}">Non défini</span>
                     </div>
                     <div class="mb-3">
-                        <label class="small text-muted d-block">Session</label>
-                        <span class="badge bg-primary" th:if="${groupe.sessionPedagogique}" 
-                              th:text="${groupe.sessionPedagogique.anneeScolaire + ' - ' + groupe.sessionPedagogique.semestre}"></span>
-                        <span class="text-muted" th:unless="${groupe.sessionPedagogique}">Non définie</span>
+                        <label class="small text-muted d-block">Session pédagogique</label>
+                        <span class="badge bg-primary" th:if="${groupe.cours != null && groupe.cours.sessionPedagogique != null}" 
+                              th:text="${groupe.cours.sessionPedagogique.anneeScolaire + ' - ' + groupe.cours.sessionPedagogique.semestre}"></span>
+                        <span class="text-muted" th:unless="${groupe.cours != null && groupe.cours.sessionPedagogique != null}">Non définie</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted d-block">Capacité</label>
+                        <span class="badge bg-secondary" th:text="${groupe.capacite}"></span>
                     </div>
                     <div class="mb-3" th:if="${groupe.code}">
                         <label class="small text-muted d-block">Code</label>
@@ -68,53 +72,71 @@
         <!-- Statistiques -->
         <div class="col-lg-8">
             <div class="row g-4 mb-4">
-                <div class="col-sm-6">
+                <div class="col-sm-4">
                     <div class="card border-0 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div class="card-body text-center p-4">
                             <i class="bi bi-people-fill fs-1 mb-2 opacity-75"></i>
-                            <h2 class="fw-bold mb-0" th:text="${groupe.etudiants.size()}">0</h2>
-                            <p class="mb-0 opacity-75">Étudiants inscrits</p>
+                            <h2 class="fw-bold mb-0" th:text="${groupe.inscriptions.size()}">0</h2>
+                            <p class="mb-0 opacity-75">Inscrits</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-6">
+                <div class="col-sm-4">
                     <div class="card border-0 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
                         <div class="card-body text-center p-4">
-                            <i class="bi bi-journal-bookmark-fill fs-1 mb-2 opacity-75"></i>
-                            <h2 class="fw-bold mb-0" th:text="${groupe.cours.size()}">0</h2>
-                            <p class="mb-0 opacity-75">Cours associés</p>
+                            <i class="bi bi-box-fill fs-1 mb-2 opacity-75"></i>
+                            <h2 class="fw-bold mb-0" th:text="${groupe.capacite}">0</h2>
+                            <p class="mb-0 opacity-75">Capacité totale</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="card border-0 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="card-body text-center p-4">
+                            <i class="bi bi-check-circle-fill fs-1 mb-2 opacity-75"></i>
+                            <h2 class="fw-bold mb-0" th:text="${groupe.placesRestantes}">0</h2>
+                            <p class="mb-0 opacity-75">Places restantes</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Liste des étudiants -->
+            <!-- Liste des inscriptions -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Étudiants du groupe</h5>
+                    <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Inscriptions validées dans ce groupe</h5>
                 </div>
                 <div class="card-body p-0">
-                    <div th:if="${groupe.etudiants.empty}" class="text-center text-muted py-4">
+                    <div th:if="${groupe.inscriptions.empty}" class="text-center text-muted py-4">
                         <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                        Aucun étudiant dans ce groupe
+                        Aucune inscription dans ce groupe
                     </div>
-                    <div th:unless="${groupe.etudiants.empty}" class="table-responsive">
+                    <div th:unless="${groupe.inscriptions.empty}" class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Matricule</th>
                                     <th>Nom complet</th>
                                     <th>Email</th>
+                                    <th>Statut</th>
                                     <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr th:each="etudiant : ${groupe.etudiants}">
-                                    <td><code th:text="${etudiant.matricule}"></code></td>
-                                    <td th:text="${etudiant.prenom + ' ' + etudiant.nom}"></td>
-                                    <td th:text="${etudiant.email}"></td>
+                                <tr th:each="inscription : ${groupe.inscriptions}">
+                                    <td><code th:text="${inscription.etudiant.matricule}"></code></td>
+                                    <td th:text="${inscription.etudiant.prenom + ' ' + inscription.etudiant.nom}"></td>
+                                    <td th:text="${inscription.etudiant.email}"></td>
+                                    <td>
+                                        <span class="badge" th:classappend="${
+                                            inscription.statut.name() == 'VALIDEE' ? 'bg-success' :
+                                            inscription.statut.name() == 'EN_ATTENTE' ? 'bg-warning' :
+                                            inscription.statut.name() == 'REFUSEE' ? 'bg-danger' :
+                                            'bg-secondary'
+                                        }" th:text="${inscription.statut}"></span>
+                                    </td>
                                     <td class="text-end">
-                                        <a th:href="@{/admin/etudiants/{id}(id=${etudiant.id})}" class="btn btn-sm btn-outline-primary">
+                                        <a th:href="@{/admin/etudiants/{id}(id=${inscription.etudiant.id})}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
@@ -125,42 +147,41 @@
                 </div>
             </div>
 
-            <!-- Liste des cours -->
+            <!-- Détails du cours -->
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0"><i class="bi bi-journal-bookmark me-2 text-success"></i>Cours du groupe</h5>
+                    <h5 class="mb-0"><i class="bi bi-journal-bookmark me-2 text-success"></i>Cours associé</h5>
                 </div>
-                <div class="card-body p-0">
-                    <div th:if="${groupe.cours.empty}" class="text-center text-muted py-4">
+                <div class="card-body">
+                    <div th:if="${groupe.cours == null}" class="text-center text-muted py-4">
                         <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                         Aucun cours associé
                     </div>
-                    <div th:unless="${groupe.cours.empty}" class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Titre</th>
-                                    <th>Formateur</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="c : ${groupe.cours}">
-                                    <td><code th:text="${c.code}"></code></td>
-                                    <td th:text="${c.titre}"></td>
-                                    <td>
-                                        <span th:if="${c.formateur}" th:text="${c.formateur.prenom + ' ' + c.formateur.nom}"></span>
-                                        <span th:unless="${c.formateur}" class="text-muted">Non assigné</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <a th:href="@{/admin/cours/{id}(id=${c.id})}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div th:if="${groupe.cours != null}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted d-block">Code</label>
+                                <code th:text="${groupe.cours.code}"></code>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted d-block">Titre</label>
+                                <span class="fw-semibold" th:text="${groupe.cours.titre}"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted d-block">Formateur</label>
+                                <span th:if="${groupe.cours.formateur}" th:text="${groupe.cours.formateur.prenom + ' ' + groupe.cours.formateur.nom}"></span>
+                                <span th:unless="${groupe.cours.formateur}" class="text-muted">Non assigné</span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted d-block">Crédits</label>
+                                <span th:text="${groupe.cours.credits}"></span>
+                            </div>
+                            <div class="col-12">
+                                <a th:href="@{/admin/cours/{id}(id=${groupe.cours.id})}" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> Voir les détails du cours
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

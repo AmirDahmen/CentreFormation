@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Valider une Inscription</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-check-circle"></i> Valider l'inscription</h1>
+        <a th:href="@{/admin/inscriptions}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour à la liste
+        </a>
+    </div>
+
+    <!-- Détails de l'inscription -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-person"></i> Étudiant
+                </div>
+                <div class="card-body">
+                    <h5 th:text="${inscription.etudiant.nom + ' ' + inscription.etudiant.prenom}"></h5>
+                    <p class="mb-1"><strong>Matricule:</strong> <span th:text="${inscription.etudiant.matricule}"></span></p>
+                    <p class="mb-1"><strong>Email:</strong> <span th:text="${inscription.etudiant.email}"></span></p>
+                    <p class="mb-0" th:if="${inscription.etudiant.specialite != null}">
+                        <strong>Spécialité:</strong> <span th:text="${inscription.etudiant.specialite.nom}"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-book"></i> Cours demandé
+                </div>
+                <div class="card-body">
+                    <h5 th:text="${inscription.cours.titre}"></h5>
+                    <p class="mb-1"><strong>Code:</strong> <span th:text="${inscription.cours.code}"></span></p>
+                    <p class="mb-1" th:if="${inscription.cours.formateur != null}">
+                        <strong>Formateur:</strong> 
+                        <span th:text="${inscription.cours.formateur.prenom + ' ' + inscription.cours.formateur.nom}"></span>
+                    </p>
+                    <p class="mb-0">
+                        <strong>Date de demande:</strong> 
+                        <span th:text="${#temporals.format(inscription.dateInscription, 'dd/MM/yyyy à HH:mm')}"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de validation -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <i class="bi bi-check2-square"></i> Valider et assigner un groupe
+        </div>
+        <div class="card-body">
+            <!-- Alerte si aucun groupe n'est associé au cours -->
+            <div th:if="${aucunGroupeAssigne}" class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Attention :</strong> Aucun groupe n'existe pour ce cours. 
+                <br>Vous devez d'abord <a th:href="@{/admin/groupes/new(coursId=${inscription.cours.id})}">créer un groupe pour ce cours</a>.
+            </div>
+            
+            <form th:if="${groupesDuCours != null and !groupesDuCours.isEmpty()}" 
+                  th:action="@{/admin/inscriptions/{id}/valider(id=${inscription.id})}" method="post">
+                <div class="mb-3">
+                    <label for="groupeId" class="form-label">
+                        Sélectionner un groupe pour le cours "<span th:text="${inscription.cours.titre}"></span>" 
+                        <span class="text-danger">*</span>
+                    </label>
+                    
+                    <!-- Groupes du cours -->
+                    <select name="groupeId" id="groupeId" class="form-select" required>
+                        <option value="">-- Choisir un groupe --</option>
+                        <option th:each="groupe : ${groupesDuCours}" 
+                                th:value="${groupe.id}" 
+                                th:text="${groupe.nom + ' (' + groupe.placesRestantes + '/' + (groupe.capacite != null ? groupe.capacite : '∞') + ' places disponibles)'}">
+                        </option>
+                    </select>
+                    
+                    <div class="form-text">
+                        Le groupe détermine l'emploi du temps de l'étudiant (séances associées).
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-lg"></i> Valider l'inscription
+                    </button>
+                    <a th:href="@{/admin/inscriptions}" class="btn btn-outline-secondary">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+            
+            <!-- Si pas de groupes, afficher seulement le bouton de création -->
+            <div th:if="${aucunGroupeAssigne}" class="mt-3">
+                <a th:href="@{/admin/groupes/new(coursId=${inscription.cours.id})}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Créer un groupe pour ce cours
+                </a>
+                <a th:href="@{/admin/inscriptions}" class="btn btn-outline-secondary">
+                    Retour
+                </a>
+            </div>
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Action de refus -->
+    <div class="card mt-4">
+        <div class="card-header bg-danger text-white">
+            <i class="bi bi-x-circle"></i> Refuser l'inscription
+        </div>
+        <div class="card-body">
+            <p>Si vous souhaitez refuser cette demande d'inscription :</p>
+            <form th:action="@{/admin/inscriptions/{id}/refuser(id=${inscription.id})}" method="post" 
+                  onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cette inscription ?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-lg"></i> Refuser l'inscription
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

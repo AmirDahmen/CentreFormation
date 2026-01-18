@@ -26,34 +26,34 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <small class="text-muted">Spécialité</small>
+                        <small class="text-muted">Cours</small>
                         <div>
-                            <span class="badge bg-info" th:if="${groupe.specialite}" 
-                                  th:text="${groupe.specialite.nom}"></span>
-                            <span class="text-muted" th:unless="${groupe.specialite}">Non définie</span>
+                            <span class="badge bg-success" th:if="${groupe.cours}" 
+                                  th:text="${groupe.cours.titre}"></span>
+                            <span class="text-muted" th:unless="${groupe.cours}">Non défini</span>
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <small class="text-muted">Session pédagogique</small>
                         <div>
-                            <span class="badge bg-primary" th:if="${groupe.sessionPedagogique}" 
-                                  th:text="${groupe.sessionPedagogique.anneeScolaire + ' - ' + groupe.sessionPedagogique.semestre}"></span>
-                            <span class="text-muted" th:unless="${groupe.sessionPedagogique}">Non définie</span>
+                            <span class="badge bg-primary" th:if="${groupe.cours != null && groupe.cours.sessionPedagogique != null}" 
+                                  th:text="${groupe.cours.sessionPedagogique.anneeScolaire + ' - ' + groupe.cours.sessionPedagogique.semestre}"></span>
+                            <span class="text-muted" th:unless="${groupe.cours != null && groupe.cours.sessionPedagogique != null}">Non définie</span>
                         </div>
                     </div>
 
                     <div class="row text-center mb-3">
                         <div class="col-6">
                             <div class="border rounded p-2">
-                                <h4 class="mb-0" th:text="${groupe.etudiants.size()}">0</h4>
-                                <small class="text-muted">Étudiants</small>
+                                <h4 class="mb-0" th:text="${groupe.inscriptions.size()}">0</h4>
+                                <small class="text-muted">Inscrits</small>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="border rounded p-2">
-                                <h4 class="mb-0" th:text="${groupe.cours.size()}">0</h4>
-                                <small class="text-muted">Cours</small>
+                                <h4 class="mb-0" th:text="${groupe.capacite}">0</h4>
+                                <small class="text-muted">Capacité</small>
                             </div>
                         </div>
                     </div>

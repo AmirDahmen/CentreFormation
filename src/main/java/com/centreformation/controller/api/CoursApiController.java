@@ -154,7 +154,7 @@ public class CoursApiController {
 
     /**
      * GET /api/cours/formateur/{formateurId}
-     * Liste les cours par formateur
+     * Liste les cours par formateur (paginé)
      */
     @GetMapping("/formateur/{formateurId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR')")
@@ -165,6 +165,17 @@ public class CoursApiController {
         
         Pageable pageable = PageRequest.of(page, size);
         Page<Cours> cours = coursService.findByFormateur(formateurId, pageable);
+        return ResponseEntity.ok(cours);
+    }
+
+    /**
+     * GET /api/cours/formateur/{formateurId}/all
+     * Liste tous les cours par formateur (sans pagination)
+     */
+    @GetMapping("/formateur/{formateurId}/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR')")
+    public ResponseEntity<List<Cours>> getAllCoursByFormateur(@PathVariable Long formateurId) {
+        List<Cours> cours = coursService.findAllByFormateur(formateurId);
         return ResponseEntity.ok(cours);
     }
 

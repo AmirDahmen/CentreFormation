@@ -30,5 +30,9 @@ public interface CoursRepository extends JpaRepository<Cours, Long> {
     @Query("SELECT c FROM Cours c JOIN c.groupes g WHERE g.id = :groupeId")
     List<Cours> findByGroupeId(@Param("groupeId") Long groupeId);
     
-    Page<Cours> findByFormateurId(Long formateurId, Pageable pageable);
+    @Query("SELECT c FROM Cours c WHERE c.formateur.id = :formateurId")
+    Page<Cours> findByFormateurId(@Param("formateurId") Long formateurId, Pageable pageable);
+    
+    @Query("SELECT c FROM Cours c LEFT JOIN FETCH c.formateur WHERE c.formateur.id = :formateurId")
+    List<Cours> findAllByFormateurId(@Param("formateurId") Long formateurId);
 }

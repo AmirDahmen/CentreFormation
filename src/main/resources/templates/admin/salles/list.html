@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Gestion des Salles</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3"><i class="bi bi-building"></i> Gestion des Salles</h1>
+        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#salleModal">
+            <i class="bi bi-plus-circle"></i> Nouvelle Salle
+        </button>
+    </div>
+
+    <!-- Alertes -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-2"></i>[[${success}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle me-2"></i>[[${error}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row g-4 mb-4">
+        <!-- Total Salles -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-white-50 text-uppercase small fw-semibold mb-1">Total Salles</p>
+                            <h2 class="fw-bold mb-0" th:text="${salles != null ? salles.size() : 0}">0</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="bi bi-building fs-4"></i>
+                        </div>
+                    </div>
+                    <span class="badge bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-grid"></i> Disponibles
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salles Actives -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-white-50 text-uppercase small fw-semibold mb-1">Salles Actives</p>
+                            <h2 class="fw-bold mb-0" th:text="${totalActives}">0</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="bi bi-check-circle fs-4"></i>
+                        </div>
+                    </div>
+                    <span class="badge bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-check"></i> En service
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Labos Informatique -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-white-50 text-uppercase small fw-semibold mb-1">Labos Info</p>
+                            <h2 class="fw-bold mb-0" th:text="${totalLabosInfo}">0</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="bi bi-pc-display fs-4"></i>
+                        </div>
+                    </div>
+                    <span class="badge bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-laptop"></i> Équipées
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Capacité Totale -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <p class="text-white-50 text-uppercase small fw-semibold mb-1">Capacité Totale</p>
+                            <h2 class="fw-bold mb-0" th:text="${capaciteTotale}">0</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="bi bi-people fs-4"></i>
+                        </div>
+                    </div>
+                    <span class="badge bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-person"></i> Places
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des salles -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Code</th>
+                            <th>Nom</th>
+                            <th>Type</th>
+                            <th>Bâtiment</th>
+                            <th>Étage</th>
+                            <th>Capacité</th>
+                            <th>Équipements</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="salle : ${salles}" th:class="${!salle.actif} ? 'table-secondary' : ''">
+                            <td>
+                                <code class="fw-bold" th:text="${salle.code}"></code>
+                            </td>
+                            <td th:text="${salle.nom ?: '-'}"></td>
+                            <td>
+                                <span class="badge" 
+                                      th:classappend="${salle.type == 'INFORMATIQUE'} ? 'bg-info' : 
+                                                      (${salle.type == 'AMPHI'} ? 'bg-primary' : 
+                                                      (${salle.type == 'TP'} ? 'bg-warning text-dark' : 'bg-secondary'))"
+                                      th:text="${salle.type ?: 'COURS'}"></span>
+                            </td>
+                            <td th:text="${salle.batiment ?: '-'}"></td>
+                            <td th:text="${salle.etage != null} ? ${salle.etage} : '-'"></td>
+                            <td>
+                                <span th:if="${salle.capacite}" th:text="${salle.capacite + ' places'}"></span>
+                                <span th:unless="${salle.capacite}" class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <span th:if="${salle.hasProjecteur}" class="badge bg-light text-dark me-1" title="Projecteur">
+                                    <i class="bi bi-projector"></i>
+                                </span>
+                                <span th:if="${salle.hasOrdinateurs}" class="badge bg-light text-dark me-1" title="Ordinateurs">
+                                    <i class="bi bi-pc-display"></i>
+                                </span>
+                                <span th:if="${salle.hasTableauBlanc}" class="badge bg-light text-dark" title="Tableau blanc">
+                                    <i class="bi bi-easel"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <span th:if="${salle.actif}" class="badge bg-success">Active</span>
+                                <span th:unless="${salle.actif}" class="badge bg-danger">Inactive</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" 
+                                            class="btn btn-outline-secondary" 
+                                            onclick="editSalle(this)"
+                                            th:attr="data-id=${salle.id}, 
+                                                     data-code=${salle.code}, 
+                                                     data-nom=${salle.nom},
+                                                     data-capacite=${salle.capacite},
+                                                     data-type=${salle.type},
+                                                     data-batiment=${salle.batiment},
+                                                     data-etage=${salle.etage},
+                                                     data-actif=${salle.actif},
+                                                     data-projecteur=${salle.hasProjecteur},
+                                                     data-ordinateurs=${salle.hasOrdinateurs},
+                                                     data-tableau=${salle.hasTableauBlanc}"
+                                            title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <a th:if="${salle.actif}"
+                                       href="#" 
+                                       onclick="return confirmDelete(this)" 
+                                       th:href="@{/admin/salles/{id}/supprimer(id=${salle.id})}" 
+                                       class="btn btn-outline-danger" 
+                                       title="Désactiver">
+                                        <i class="bi bi-x-circle"></i>
+                                    </a>
+                                    <a th:unless="${salle.actif}"
+                                       th:href="@{/admin/salles/{id}/activer(id=${salle.id})}" 
+                                       class="btn btn-outline-success" 
+                                       title="Réactiver">
+                                        <i class="bi bi-check-circle"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div th:if="${salles.isEmpty()}" class="text-center py-5">
+                <i class="bi bi-building text-muted" style="font-size: 4rem;"></i>
+                <p class="text-muted mt-3">Aucune salle enregistrée</p>
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#salleModal">
+                    <i class="bi bi-plus-circle"></i> Ajouter une salle
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour créer/modifier une salle -->
+    <div class="modal fade" id="salleModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-building me-2"></i>Nouvelle Salle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="salleForm" method="post" th:action="@{/admin/salles/nouvelle}">
+                    <input type="hidden" id="salleId" name="id">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="code" class="form-label">Code *</label>
+                                <input type="text" class="form-control" id="code" name="code" required 
+                                       placeholder="Ex: A101, LAB1">
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label for="nom" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="nom" name="nom" 
+                                       placeholder="Ex: Salle de cours principale">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="type" class="form-label">Type</label>
+                                <select class="form-select" id="type" name="type">
+                                    <option value="COURS">Salle de cours</option>
+                                    <option value="INFORMATIQUE">Laboratoire informatique</option>
+                                    <option value="TP">Salle de TP</option>
+                                    <option value="AMPHI">Amphithéâtre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="batiment" class="form-label">Bâtiment</label>
+                                <input type="text" class="form-control" id="batiment" name="batiment" 
+                                       placeholder="Ex: Bâtiment A">
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label for="etage" class="form-label">Étage</label>
+                                <input type="number" class="form-control" id="etage" name="etage" min="0" max="10">
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label for="capacite" class="form-label">Capacité</label>
+                                <input type="number" class="form-control" id="capacite" name="capacite" min="1" max="500">
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h6><i class="bi bi-gear me-2"></i>Équipements</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="hasProjecteur" name="hasProjecteur" value="true">
+                                    <label class="form-check-label" for="hasProjecteur">
+                                        <i class="bi bi-projector me-1"></i> Projecteur
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="hasOrdinateurs" name="hasOrdinateurs" value="true">
+                                    <label class="form-check-label" for="hasOrdinateurs">
+                                        <i class="bi bi-pc-display me-1"></i> Ordinateurs
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="hasTableauBlanc" name="hasTableauBlanc" value="true" checked>
+                                    <label class="form-check-label" for="hasTableauBlanc">
+                                        <i class="bi bi-easel me-1"></i> Tableau blanc
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="actif" name="actif" value="true" checked>
+                            <label class="form-check-label" for="actif">
+                                Salle active (disponible pour les séances)
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-check-lg me-1"></i> Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="extra-js">
+<script>
+function editSalle(btn) {
+    const id = btn.getAttribute('data-id');
+    const code = btn.getAttribute('data-code');
+    const nom = btn.getAttribute('data-nom');
+    const capacite = btn.getAttribute('data-capacite');
+    const type = btn.getAttribute('data-type');
+    const batiment = btn.getAttribute('data-batiment');
+    const etage = btn.getAttribute('data-etage');
+    const actif = btn.getAttribute('data-actif') === 'true';
+    const projecteur = btn.getAttribute('data-projecteur') === 'true';
+    const ordinateurs = btn.getAttribute('data-ordinateurs') === 'true';
+    const tableau = btn.getAttribute('data-tableau') === 'true';
+    
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-building me-2"></i>Modifier Salle';
+    document.getElementById('salleId').value = id;
+    document.getElementById('code').value = code || '';
+    document.getElementById('nom').value = nom || '';
+    document.getElementById('capacite').value = capacite || '';
+    document.getElementById('type').value = type || 'COURS';
+    document.getElementById('batiment').value = batiment || '';
+    document.getElementById('etage').value = etage || '';
+    document.getElementById('actif').checked = actif;
+    document.getElementById('hasProjecteur').checked = projecteur;
+    document.getElementById('hasOrdinateurs').checked = ordinateurs;
+    document.getElementById('hasTableauBlanc').checked = tableau;
+    
+    document.getElementById('salleForm').action = '/admin/salles/' + id + '/modifier';
+    
+    const modal = new bootstrap.Modal(document.getElementById('salleModal'));
+    modal.show();
+}
+
+function confirmDelete(link) {
+    if (confirm('Êtes-vous sûr de vouloir désactiver cette salle ?')) {
+        return true;
+    }
+    return false;
+}
+
+// Reset form when modal is closed
+document.getElementById('salleModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-building me-2"></i>Nouvelle Salle';
+    document.getElementById('salleForm').reset();
+    document.getElementById('salleForm').action = '/admin/salles/nouvelle';
+    document.getElementById('salleId').value = '';
+    document.getElementById('hasTableauBlanc').checked = true;
+    document.getElementById('actif').checked = true;
+});
+</script>
+</th:block>
+</body>
+</html>

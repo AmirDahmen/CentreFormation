@@ -20,6 +20,18 @@ public interface InscriptionRepository extends JpaRepository<Inscription, Long> 
     
     List<Inscription> findByCours(Cours cours);
     
+    /**
+     * Récupère les inscriptions par cours avec fetch des relations pour éviter lazy loading
+     */
+    @Query("SELECT i FROM Inscription i " +
+           "LEFT JOIN FETCH i.etudiant e " +
+           "LEFT JOIN FETCH e.specialite " +
+           "LEFT JOIN FETCH i.cours c " +
+           "LEFT JOIN FETCH c.formateur " +
+           "LEFT JOIN FETCH i.groupe g " +
+           "WHERE c.id = :coursId")
+    List<Inscription> findByCoursIdWithDetails(@Param("coursId") Long coursId);
+    
     Optional<Inscription> findByEtudiantAndCours(Etudiant etudiant, Cours cours);
     
     boolean existsByEtudiantAndCours(Etudiant etudiant, Cours cours);
@@ -43,4 +55,18 @@ public interface InscriptionRepository extends JpaRepository<Inscription, Long> 
         @Param("statut") Inscription.StatutInscription statut,
         Pageable pageable
     );
+    
+    // Compter les inscriptions validées pour un groupe (pour vérifier la capacité)
+    @Query("SELECT COUNT(i) FROM Inscription i WHERE i.groupe.id = :groupeId AND i.statut = 'VALIDEE'")
+    long countByGroupeIdAndStatutValidee(@Param("groupeId") Long groupeId);
+    
+    // Inscriptions en attente avec fetch des relations
+    @Query("SELECT i FROM Inscription i " +
+           "LEFT JOIN FETCH i.etudiant e " +
+           "LEFT JOIN FETCH e.specialite " +
+           "LEFT JOIN FETCH i.cours c " +
+           "LEFT JOIN FETCH c.formateur " +
+           "WHERE i.statut = 'EN_ATTENTE' " +
+           "ORDER BY i.dateInscription DESC")
+    List<Inscription> findInscriptionsEnAttenteWithDetails();
 }

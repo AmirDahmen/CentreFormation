@@ -22,12 +22,15 @@ public class SessionPedagogique {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 100)
+    private String nom; // Ex: "Session Automne 2025"
+
     @NotBlank(message = "L'année scolaire est obligatoire")
     @Column(name = "annee_scolaire", nullable = false, length = 20)
-    private String anneeScolaire;
+    private String anneeScolaire; // Ex: "2025-2026"
 
     @Column(length = 10)
-    private String semestre;
+    private String semestre; // Ex: "S1", "S2"
 
     @Column(name = "date_debut")
     private LocalDate dateDebut;
@@ -35,8 +38,21 @@ public class SessionPedagogique {
     @Column(name = "date_fin")
     private LocalDate dateFin;
 
+    @Column(name = "actif")
+    @Builder.Default
+    private Boolean actif = true;
+
+    // Une session contient plusieurs cours
     @OneToMany(mappedBy = "sessionPedagogique", cascade = CascadeType.ALL)
     @Builder.Default
     @JsonIgnore
-    private Set<Groupe> groupes = new HashSet<>();
+    private Set<Cours> cours = new HashSet<>();
+    
+    // Méthode utilitaire pour obtenir un nom d'affichage
+    public String getDisplayName() {
+        if (nom != null && !nom.isEmpty()) {
+            return nom;
+        }
+        return anneeScolaire + (semestre != null ? " - " + semestre : "");
+    }
 }

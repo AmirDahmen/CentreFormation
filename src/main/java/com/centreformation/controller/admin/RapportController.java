@@ -101,7 +101,7 @@ public class RapportController {
             
             List<Inscription> inscriptions = inscriptionService.findByCours(coursId);
             inscriptions = inscriptions.stream()
-                    .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+                    .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                     .toList();
             
             byte[] pdfContent = pdfService.generateListeEtudiantsCours(cours, inscriptions);
@@ -187,7 +187,7 @@ public class RapportController {
             
             List<Inscription> inscriptions = inscriptionService.findByEtudiant(etudiantId);
             inscriptions = inscriptions.stream()
-                    .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+                    .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                     .toList();
             
             byte[] pdfContent = pdfService.generateAttestationInscription(etudiant, inscriptions);
@@ -210,8 +210,8 @@ public class RapportController {
         stats.put("totalEtudiants", etudiantService.count());
         stats.put("totalFormateurs", formateurService.count());
         stats.put("totalCours", coursService.count());
-        stats.put("inscriptionsActives", inscriptionService.countByStatut(
-                Inscription.StatutInscription.ACTIVE));
+        stats.put("inscriptionsValidees", inscriptionService.countByStatut(
+                Inscription.StatutInscription.VALIDEE));
         stats.put("totalNotes", noteService.count());
         
         List<Note> allNotes = noteService.findAll();

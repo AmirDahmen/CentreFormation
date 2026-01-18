@@ -86,7 +86,8 @@
     </div>
 </div>
 
-<script layout:fragment="scripts">
+<th:block layout:fragment="scripts">
+<script>
 function editSpecialite(btn) {
     const id = btn.getAttribute('data-id');
     const nom = btn.getAttribute('data-nom');
@@ -110,5 +111,6 @@ document.getElementById('specialiteModal').addEventListener('hidden.bs.modal', f
     document.getElementById('specialiteForm').action = '/admin/specialites/nouvelle';
 });
 </script>
+</th:block>
 </body>
 </html>

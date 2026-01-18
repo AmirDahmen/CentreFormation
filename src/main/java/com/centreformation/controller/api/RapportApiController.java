@@ -100,9 +100,9 @@ public class RapportApiController {
             }
             
             List<Inscription> inscriptions = inscriptionService.findByCours(coursId);
-            // Filtrer uniquement les inscriptions actives
+            // Filtrer uniquement les inscriptions validées
             inscriptions = inscriptions.stream()
-                    .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+                    .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                     .toList();
             
             byte[] pdfContent = pdfService.generateListeEtudiantsCours(cours, inscriptions);
@@ -169,7 +169,7 @@ public class RapportApiController {
             stats.put("totalFormateurs", formateurService.count());
             stats.put("totalCours", coursService.count());
             stats.put("inscriptionsActives", inscriptionService.countByStatut(
-                    Inscription.StatutInscription.ACTIVE));
+                    Inscription.StatutInscription.VALIDEE));
             stats.put("totalNotes", noteService.count());
             
             // Moyenne générale
@@ -238,9 +238,9 @@ public class RapportApiController {
             }
             
             List<Inscription> inscriptions = inscriptionService.findByEtudiant(etudiantId);
-            // Filtrer uniquement les inscriptions actives
+            // Filtrer uniquement les inscriptions validées
             inscriptions = inscriptions.stream()
-                    .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+                    .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                     .toList();
             
             byte[] pdfContent = pdfService.generateAttestationInscription(etudiant, inscriptions);

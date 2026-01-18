@@ -81,6 +81,20 @@ public class SeanceCoursServiceImpl implements SeanceCoursService {
     }
 
     @Override
+    public List<SeanceCours> findByGroupeAndDateBetween(Long groupeId, LocalDate debut, LocalDate fin) {
+        Groupe groupe = groupeRepository.findById(groupeId)
+                .orElseThrow(() -> new RuntimeException("Groupe non trouvé"));
+        return seanceCoursRepository.findByGroupe(groupe).stream()
+                .filter(s -> !s.getDate().isBefore(debut) && !s.getDate().isAfter(fin))
+                .sorted((s1, s2) -> {
+                    int dateCompare = s1.getDate().compareTo(s2.getDate());
+                    if (dateCompare != 0) return dateCompare;
+                    return s1.getHeureDebut().compareTo(s2.getHeureDebut());
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<SeanceCours> getEmploiTempsEtudiant(Long etudiantId, LocalDate debut, LocalDate fin) {
         Etudiant etudiant = etudiantRepository.findById(etudiantId)
                 .orElseThrow(() -> new RuntimeException("Étudiant non trouvé"));

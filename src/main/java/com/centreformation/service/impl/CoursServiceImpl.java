@@ -59,6 +59,12 @@ public class CoursServiceImpl implements CoursService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Cours> findAllByFormateur(Long formateurId) {
+        return coursRepository.findAllByFormateurId(formateurId);
+    }
+
+    @Override
     public List<Cours> findByGroupe(Long groupeId) {
         return coursRepository.findByGroupeId(groupeId);
     }

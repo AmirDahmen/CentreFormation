@@ -186,7 +186,8 @@
                             </td>
                             <td class="text-center">
                                 <span class="badge rounded-pill bg-secondary" 
-                                      th:text="${etudiant.groupes.size()}">0</span>
+                                      th:with="inscriptionsValidees=${etudiant.inscriptions.?[statut.name() == 'VALIDEE' && groupe != null]}" 
+                                      th:text="${inscriptionsValidees.size()}">0</span>
                             </td>
                             <td>
                                 <small class="text-muted">

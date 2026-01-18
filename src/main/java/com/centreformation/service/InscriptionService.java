@@ -23,7 +23,14 @@ public interface InscriptionService {
 
     Page<Inscription> findByStatut(Inscription.StatutInscription statut, Pageable pageable);
 
+    // Étudiant s'inscrit à un cours (statut EN_ATTENTE)
     Inscription inscrire(Long etudiantId, Long coursId);
+
+    // Admin valide l'inscription et assigne un groupe
+    Inscription valider(Long inscriptionId, Long groupeId);
+
+    // Admin refuse l'inscription
+    Inscription refuser(Long inscriptionId);
 
     Inscription save(Inscription inscription);
 
@@ -36,4 +43,7 @@ public interface InscriptionService {
     long count();
 
     long countByStatut(Inscription.StatutInscription statut);
+    
+    // Compter les inscriptions validées pour un groupe (pour vérifier la capacité)
+    long countInscriptionsValideesForGroupe(Long groupeId);
 }

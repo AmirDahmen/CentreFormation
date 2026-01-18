@@ -2,9 +2,6 @@ package com.centreformation.controller.admin;
 
 import com.centreformation.entity.Groupe;
 import com.centreformation.service.GroupeService;
-import com.centreformation.service.SessionPedagogiqueService;
-import com.centreformation.service.SpecialiteService;
-import com.centreformation.service.EtudiantService;
 import com.centreformation.service.CoursService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,18 +14,12 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.HashSet;
-import java.util.List;
-
 @Controller
 @RequestMapping("/admin/groupes")
 @RequiredArgsConstructor
 public class GroupeController {
 
     private final GroupeService groupeService;
-    private final SessionPedagogiqueService sessionService;
-    private final SpecialiteService specialiteService;
-    private final EtudiantService etudiantService;
     private final CoursService coursService;
 
     @GetMapping
@@ -64,11 +55,19 @@ public class GroupeController {
     }
 
     @GetMapping("/nouveau")
-    public String showCreateForm(Model model) {
-        model.addAttribute("groupe", new Groupe());
-        model.addAttribute("sessions", sessionService.findAll());
-        model.addAttribute("specialites", specialiteService.findAll());
-        model.addAttribute("etudiants", etudiantService.findAll());
+    public String showCreateForm(@RequestParam(required = false) Long coursId, Model model) {
+        Groupe groupe = new Groupe();
+        
+        // Si un coursId est fourni, pré-sélectionner le cours
+        if (coursId != null) {
+            try {
+                groupe.setCours(coursService.findById(coursId));
+            } catch (Exception e) {
+                // Ignorer si le cours n'existe pas
+            }
+        }
+        
+        model.addAttribute("groupe", groupe);
         model.addAttribute("cours", coursService.findAll());
         model.addAttribute("activePage", "groupes");
         model.addAttribute("isEdit", false);
@@ -78,15 +77,10 @@ public class GroupeController {
     @PostMapping("/nouveau")
     public String create(@Valid @ModelAttribute Groupe groupe,
                         BindingResult result,
-                        @RequestParam(required = false) List<Long> etudiantIds,
-                        @RequestParam(required = false) List<Long> coursIds,
                         Model model,
                         RedirectAttributes redirectAttributes) {
         
         if (result.hasErrors()) {
-            model.addAttribute("sessions", sessionService.findAll());
-            model.addAttribute("specialites", specialiteService.findAll());
-            model.addAttribute("etudiants", etudiantService.findAll());
             model.addAttribute("cours", coursService.findAll());
             model.addAttribute("isEdit", false);
             model.addAttribute("activePage", "groupes");
@@ -96,21 +90,11 @@ public class GroupeController {
         try {
             Groupe saved = groupeService.save(groupe);
             
-            if (etudiantIds != null && !etudiantIds.isEmpty()) {
-                groupeService.setEtudiants(saved.getId(), new HashSet<>(etudiantIds));
-            }
-            if (coursIds != null && !coursIds.isEmpty()) {
-                groupeService.setCours(saved.getId(), new HashSet<>(coursIds));
-            }
-            
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Le groupe " + groupe.getNom() + " a été créé avec succès.");
             return "redirect:/admin/groupes/" + saved.getId();
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("sessions", sessionService.findAll());
-            model.addAttribute("specialites", specialiteService.findAll());
-            model.addAttribute("etudiants", etudiantService.findAll());
             model.addAttribute("cours", coursService.findAll());
             model.addAttribute("isEdit", false);
             model.addAttribute("activePage", "groupes");
@@ -122,14 +106,7 @@ public class GroupeController {
     public String showEditForm(@PathVariable Long id, Model model) {
         Groupe groupe = groupeService.findById(id);
         model.addAttribute("groupe", groupe);
-        model.addAttribute("sessions", sessionService.findAll());
-        model.addAttribute("specialites", specialiteService.findAll());
-        model.addAttribute("etudiants", etudiantService.findAll());
         model.addAttribute("cours", coursService.findAll());
-        model.addAttribute("selectedEtudiants", groupe.getEtudiants().stream()
-                .map(e -> e.getId()).toList());
-        model.addAttribute("selectedCours", groupe.getCours().stream()
-                .map(c -> c.getId()).toList());
         model.addAttribute("activePage", "groupes");
         model.addAttribute("isEdit", true);
         return "admin/groupes/form";
@@ -139,15 +116,10 @@ public class GroupeController {
     public String update(@PathVariable Long id,
                         @Valid @ModelAttribute Groupe groupe,
                         BindingResult result,
-                        @RequestParam(required = false) List<Long> etudiantIds,
-                        @RequestParam(required = false) List<Long> coursIds,
                         Model model,
                         RedirectAttributes redirectAttributes) {
         
         if (result.hasErrors()) {
-            model.addAttribute("sessions", sessionService.findAll());
-            model.addAttribute("specialites", specialiteService.findAll());
-            model.addAttribute("etudiants", etudiantService.findAll());
             model.addAttribute("cours", coursService.findAll());
             model.addAttribute("isEdit", true);
             model.addAttribute("activePage", "groupes");
@@ -157,17 +129,11 @@ public class GroupeController {
         try {
             groupeService.update(id, groupe);
             
-            groupeService.setEtudiants(id, etudiantIds != null ? new HashSet<>(etudiantIds) : new HashSet<>());
-            groupeService.setCours(id, coursIds != null ? new HashSet<>(coursIds) : new HashSet<>());
-            
             redirectAttributes.addFlashAttribute("successMessage", 
                 "Le groupe " + groupe.getNom() + " a été modifié avec succès.");
             return "redirect:/admin/groupes/" + id;
         } catch (Exception e) {
             model.addAttribute("errorMessage", e.getMessage());
-            model.addAttribute("sessions", sessionService.findAll());
-            model.addAttribute("specialites", specialiteService.findAll());
-            model.addAttribute("etudiants", etudiantService.findAll());
             model.addAttribute("cours", coursService.findAll());
             model.addAttribute("isEdit", true);
             model.addAttribute("activePage", "groupes");

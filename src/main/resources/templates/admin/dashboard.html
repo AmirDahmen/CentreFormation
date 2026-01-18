@@ -16,6 +16,21 @@
         <p class="text-muted mb-0">Bienvenue sur votre espace d'administration</p>
     </div>
 
+    <!-- Alerte inscriptions en attente -->
+    <div th:if="${inscriptionsEnAttente != null && inscriptionsEnAttente > 0}" 
+         class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+            <div>
+                <strong th:text="${inscriptionsEnAttente}"></strong> inscription(s) en attente de validation.
+                <a th:href="@{/admin/inscriptions(statut='EN_ATTENTE')}" class="alert-link ms-2">
+                    Traiter maintenant <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <!-- Statistics Cards -->
     <div class="row g-4 mb-4">
         <!-- Étudiants -->

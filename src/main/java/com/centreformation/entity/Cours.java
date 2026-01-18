@@ -36,10 +36,16 @@ public class Cours {
     @Column(name = "nombre_heures")
     private Integer nombreHeures;
 
+    // Un cours appartient à une session pédagogique
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "session_pedagogique_id")
+    @JsonIgnoreProperties({"cours", "hibernateLazyInitializer", "handler"})
+    private SessionPedagogique sessionPedagogique;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "formateur_id", referencedColumnName = "id", 
                 foreignKey = @ForeignKey(name = "fk_cours_formateur"))
-    @JsonIgnoreProperties({"cours", "seances", "utilisateur", "specialite"})
+    @JsonIgnoreProperties({"cours", "seances", "utilisateur", "specialite", "hibernateLazyInitializer", "handler"})
     private Formateur formateur;
 
     @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -52,12 +58,8 @@ public class Cours {
     @JsonIgnore
     private Set<Note> notes = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-        name = "cours_groupes",
-        joinColumns = @JoinColumn(name = "cours_id"),
-        inverseJoinColumns = @JoinColumn(name = "groupe_id")
-    )
+    // Un cours contient plusieurs groupes (OneToMany au lieu de ManyToMany)
+    @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonIgnore
     private Set<Groupe> groupes = new HashSet<>();

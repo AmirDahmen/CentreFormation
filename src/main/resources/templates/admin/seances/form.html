@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title th:text="${isEdit} ? 'Modifier une séance' : 'Nouvelle séance'">Formulaire séance</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">
+                    <i class="bi bi-calendar-plus me-2 text-primary" th:if="${!isEdit}"></i>
+                    <i class="bi bi-pencil me-2 text-warning" th:if="${isEdit}"></i>
+                    <span th:text="${isEdit} ? 'Modifier la séance' : 'Nouvelle séance'"></span>
+                </h1>
+                <p class="text-muted mb-0">Planifiez une séance de cours</p>
+            </div>
+            <a th:href="@{/admin/seances}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour au calendrier
+            </a>
+        </div>
+    </div>
+
+    <!-- Alertes -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-calendar-event me-2"></i>Informations de la séance
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form th:action="${isEdit} ? @{/admin/seances/{id}/modifier(id=${seance.id})} : @{/admin/seances/nouvelle}" 
+                          th:object="${seance}" method="post">
+                        
+                        <div class="row g-4">
+                            <!-- Cours -->
+                            <div class="col-12">
+                                <label for="coursId" class="form-label fw-semibold">Cours <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" id="coursId" name="coursId" required>
+                                    <option value="">-- Sélectionner un cours --</option>
+                                    <option th:each="c : ${cours}" 
+                                            th:value="${c.id}" 
+                                            th:text="${c.code + ' - ' + c.nom}"
+                                            th:selected="${seance.cours != null && seance.cours.id == c.id}"></option>
+                                </select>
+                            </div>
+                            
+                            <!-- Date et heures -->
+                            <div class="col-md-4">
+                                <label for="date" class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-lg" id="date" th:field="*{date}" required>
+                                <div th:if="${#fields.hasErrors('date')}" class="text-danger small mt-1" th:errors="*{date}"></div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="heureDebut" class="form-label fw-semibold">Heure de début <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control form-control-lg" id="heureDebut" th:field="*{heureDebut}" required>
+                                <div th:if="${#fields.hasErrors('heureDebut')}" class="text-danger small mt-1" th:errors="*{heureDebut}"></div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="heureFin" class="form-label fw-semibold">Heure de fin <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control form-control-lg" id="heureFin" th:field="*{heureFin}" required>
+                                <div th:if="${#fields.hasErrors('heureFin')}" class="text-danger small mt-1" th:errors="*{heureFin}"></div>
+                            </div>
+                            
+                            <!-- Formateur et Groupe -->
+                            <div class="col-md-6">
+                                <label for="formateurId" class="form-label fw-semibold">Formateur</label>
+                                <select class="form-select form-select-lg" id="formateurId" name="formateurId">
+                                    <option value="">-- Sélectionner un formateur --</option>
+                                    <option th:each="f : ${formateurs}" 
+                                            th:value="${f.id}" 
+                                            th:text="${f.nom + ' ' + f.prenom}"
+                                            th:selected="${seance.formateur != null && seance.formateur.id == f.id}"></option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="groupeId" class="form-label fw-semibold">Groupe</label>
+                                <select class="form-select form-select-lg" id="groupeId" name="groupeId">
+                                    <option value="">-- Sélectionner un groupe --</option>
+                                    <option th:each="g : ${groupes}" 
+                                            th:value="${g.id}" 
+                                            th:text="${g.nom}"
+                                            th:selected="${seance.groupe != null && seance.groupe.id == g.id}"></option>
+                                </select>
+                            </div>
+                            
+                            <!-- Salle -->
+                            <div class="col-md-6">
+                                <label for="salle" class="form-label fw-semibold">Salle</label>
+                                <input type="text" class="form-control form-control-lg" id="salle" th:field="*{salle}" 
+                                       placeholder="Ex: A101, Labo Info 1...">
+                            </div>
+                            
+                            <!-- Contenu -->
+                            <div class="col-12">
+                                <label for="contenu" class="form-label fw-semibold">Contenu / Description</label>
+                                <textarea class="form-control" id="contenu" th:field="*{contenu}" rows="3"
+                                          placeholder="Décrivez le contenu de la séance..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between gap-3 pt-4 mt-4 border-top">
+                            <div th:if="${isEdit}">
+                                <button type="button" class="btn btn-outline-danger btn-lg px-4" 
+                                        onclick="confirmDelete()" th:data-id="${seance.id}">
+                                    <i class="bi bi-trash me-2"></i>Supprimer
+                                </button>
+                            </div>
+                            <div class="ms-auto d-flex gap-2">
+                                <a th:href="@{/admin/seances}" class="btn btn-outline-secondary btn-lg px-4">
+                                    <i class="bi bi-x-lg me-2"></i>Annuler
+                                </a>
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-check-lg me-2"></i>
+                                    <span th:text="${isEdit} ? 'Enregistrer' : 'Créer la séance'"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Info box -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Conseils de planification
+                    </h6>
+                    <ul class="mb-0 text-muted">
+                        <li>Les créneaux sont généralement de <strong>2 heures</strong></li>
+                        <li>Vérifiez la disponibilité du formateur et du groupe</li>
+                        <li>Les conflits d'horaire seront automatiquement détectés</li>
+                        <li>Pensez à indiquer la salle pour faciliter la localisation</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+<script th:inline="javascript">
+    // Auto-calcul de l'heure de fin (2h après le début)
+    document.getElementById('heureDebut').addEventListener('change', function() {
+        const debut = this.value;
+        if (debut) {
+            const [hours, minutes] = debut.split(':').map(Number);
+            const finHours = (hours + 2) % 24;
+            document.getElementById('heureFin').value = 
+                String(finHours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+        }
+    });
+    
+    // Confirmation de suppression
+    function confirmDelete() {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette séance ?')) {
+            const seanceId = /*[[${seance?.id}]]*/ null;
+            if (seanceId) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/admin/seances/${seanceId}/supprimer`;
+                
+                // CSRF token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = document.querySelector('meta[name="_csrf"]')?.content || '';
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    }
+</script>
+</th:block>
+</body>
+</html>

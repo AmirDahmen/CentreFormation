@@ -51,80 +51,29 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <label for="specialite" class="form-label fw-semibold">Spécialité</label>
-                                <select class="form-select form-select-lg" id="specialite" th:field="*{specialite}">
-                                    <option value="">-- Sélectionner une spécialité --</option>
-                                    <option th:each="spec : ${specialites}" th:value="${spec.id}" th:text="${spec.nom}"></option>
+                                <label for="cours" class="form-label fw-semibold">Cours <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" id="cours" th:field="*{cours}" required>
+                                    <option value="">-- Sélectionner un cours --</option>
+                                    <option th:each="c : ${cours}" th:value="${c.id}" 
+                                            th:text="${c.titre + ' (' + c.code + ')'}">
+                                    </option>
                                 </select>
+                                <small class="text-muted">La session pédagogique sera automatiquement associée via le cours</small>
                             </div>
                             
                             <div class="col-md-6">
-                                <label for="sessionPedagogique" class="form-label fw-semibold">Session pédagogique</label>
-                                <select class="form-select form-select-lg" id="sessionPedagogique" th:field="*{sessionPedagogique}">
-                                    <option value="">-- Sélectionner une session --</option>
-                                    <option th:each="sess : ${sessions}" th:value="${sess.id}" 
-                                            th:text="${sess.anneeScolaire + ' - ' + sess.semestre}"></option>
-                                </select>
+                                <label for="capacite" class="form-label fw-semibold">Capacité <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control form-control-lg" id="capacite" th:field="*{capacite}" 
+                                       placeholder="Ex: 30" min="1" required>
+                                <div th:if="${#fields.hasErrors('capacite')}" class="text-danger small mt-1" th:errors="*{capacite}"></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Étudiants -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                        <h5 class="mb-0 fw-semibold">
-                            <i class="bi bi-people me-2"></i>Étudiants du groupe
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div th:if="${etudiants.empty}" class="text-center text-muted py-3">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            Aucun étudiant disponible
-                        </div>
-                        <div th:unless="${etudiants.empty}" class="row g-2" style="max-height: 300px; overflow-y: auto;">
-                            <div class="col-md-6 col-lg-4" th:each="etudiant : ${etudiants}">
-                                <div class="form-check p-3 border rounded hover-bg-light">
-                                    <input class="form-check-input" type="checkbox" 
-                                           name="etudiantIds" th:value="${etudiant.id}" th:id="'etud-' + ${etudiant.id}"
-                                           th:checked="${selectedEtudiants != null && selectedEtudiants.contains(etudiant.id)}">
-                                    <label class="form-check-label w-100" th:for="'etud-' + ${etudiant.id}">
-                                        <span class="fw-semibold" th:text="${etudiant.prenom + ' ' + etudiant.nom}"></span>
-                                        <br><small class="text-muted" th:text="${etudiant.matricule}"></small>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Cours -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                        <h5 class="mb-0 fw-semibold">
-                            <i class="bi bi-journal-bookmark me-2"></i>Cours associés
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <div th:if="${cours.empty}" class="text-center text-muted py-3">
-                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                            Aucun cours disponible
-                        </div>
-                        <div th:unless="${cours.empty}" class="row g-2" style="max-height: 300px; overflow-y: auto;">
-                            <div class="col-md-6 col-lg-4" th:each="c : ${cours}">
-                                <div class="form-check p-3 border rounded hover-bg-light">
-                                    <input class="form-check-input" type="checkbox" 
-                                           name="coursIds" th:value="${c.id}" th:id="'cours-' + ${c.id}"
-                                           th:checked="${selectedCours != null && selectedCours.contains(c.id)}">
-                                    <label class="form-check-label w-100" th:for="'cours-' + ${c.id}">
-                                        <span class="fw-semibold" th:text="${c.titre}"></span>
-                                        <br><small class="text-muted" th:text="${c.code}"></small>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+
 
                 <!-- Boutons -->
                 <div class="d-flex justify-content-end gap-3">

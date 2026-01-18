@@ -53,9 +53,10 @@ public class StatistiquesApiController {
         stats.put("totalSpecialites", specialiteService.count());
         
         // Statistiques inscriptions
-        stats.put("inscriptionsActives", inscriptionService.countByStatut(Inscription.StatutInscription.ACTIVE));
+        stats.put("inscriptionsValidees", inscriptionService.countByStatut(Inscription.StatutInscription.VALIDEE));
+        stats.put("inscriptionsEnAttente", inscriptionService.countByStatut(Inscription.StatutInscription.EN_ATTENTE));
+        stats.put("inscriptionsRefusees", inscriptionService.countByStatut(Inscription.StatutInscription.REFUSEE));
         stats.put("inscriptionsAnnulees", inscriptionService.countByStatut(Inscription.StatutInscription.ANNULEE));
-        stats.put("inscriptionsTerminees", inscriptionService.countByStatut(Inscription.StatutInscription.TERMINEE));
         stats.put("totalInscriptions", inscriptionService.count());
         
         // Statistiques notes
@@ -86,10 +87,10 @@ public class StatistiquesApiController {
                             : "Non assigné");
                     
                     List<Inscription> inscriptions = inscriptionService.findByCours(cours.getId());
-                    long inscriptionsActives = inscriptions.stream()
-                            .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+                    long inscriptionsValidees = inscriptions.stream()
+                            .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                             .count();
-                    stat.put("nombreInscrits", inscriptionsActives);
+                    stat.put("nombreInscrits", inscriptionsValidees);
                     stat.put("totalInscriptions", inscriptions.size());
                     
                     Double moyenne = noteService.calculateAverageByCours(cours.getId());
@@ -172,19 +173,22 @@ public class StatistiquesApiController {
         Map<String, Object> stats = new HashMap<>();
         
         long total = inscriptionService.count();
-        long actives = inscriptionService.countByStatut(Inscription.StatutInscription.ACTIVE);
+        long validees = inscriptionService.countByStatut(Inscription.StatutInscription.VALIDEE);
+        long enAttente = inscriptionService.countByStatut(Inscription.StatutInscription.EN_ATTENTE);
+        long refusees = inscriptionService.countByStatut(Inscription.StatutInscription.REFUSEE);
         long annulees = inscriptionService.countByStatut(Inscription.StatutInscription.ANNULEE);
-        long terminees = inscriptionService.countByStatut(Inscription.StatutInscription.TERMINEE);
         
         stats.put("total", total);
-        stats.put("actives", actives);
+        stats.put("validees", validees);
+        stats.put("enAttente", enAttente);
+        stats.put("refusees", refusees);
         stats.put("annulees", annulees);
-        stats.put("terminees", terminees);
         
         // Pourcentages
-        stats.put("pourcentageActives", total > 0 ? Math.round((double) actives / total * 10000.0) / 100.0 : 0);
+        stats.put("pourcentageValidees", total > 0 ? Math.round((double) validees / total * 10000.0) / 100.0 : 0);
+        stats.put("pourcentageEnAttente", total > 0 ? Math.round((double) enAttente / total * 10000.0) / 100.0 : 0);
+        stats.put("pourcentageRefusees", total > 0 ? Math.round((double) refusees / total * 10000.0) / 100.0 : 0);
         stats.put("pourcentageAnnulees", total > 0 ? Math.round((double) annulees / total * 10000.0) / 100.0 : 0);
-        stats.put("pourcentageTerminees", total > 0 ? Math.round((double) terminees / total * 10000.0) / 100.0 : 0);
         
         return ResponseEntity.ok(stats);
     }
@@ -261,8 +265,8 @@ public class StatistiquesApiController {
         // Inscriptions
         var inscriptions = inscriptionService.findByEtudiant(etudiantId);
         stats.put("totalInscriptions", inscriptions.size());
-        stats.put("inscriptionsActives", inscriptions.stream()
-                .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+        stats.put("inscriptionsValidees", inscriptions.stream()
+                .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                 .count());
         
         // Notes
@@ -317,7 +321,7 @@ public class StatistiquesApiController {
                     
                     var inscriptions = inscriptionService.findByCours(c.getId());
                     stat.put("nombreInscrits", inscriptions.stream()
-                            .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+                            .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                             .count());
                     
                     Double moyenne = noteService.calculateAverageByCours(c.getId());
@@ -331,7 +335,7 @@ public class StatistiquesApiController {
         // Total étudiants sous ce formateur
         long totalEtudiants = cours.stream()
                 .flatMap(c -> inscriptionService.findByCours(c.getId()).stream())
-                .filter(i -> i.getStatut() == Inscription.StatutInscription.ACTIVE)
+                .filter(i -> i.getStatut() == Inscription.StatutInscription.VALIDEE)
                 .map(i -> i.getEtudiant().getId())
                 .distinct()
                 .count();

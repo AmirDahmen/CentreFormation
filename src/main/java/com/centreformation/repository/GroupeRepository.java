@@ -1,7 +1,7 @@
 package com.centreformation.repository;
 
+import com.centreformation.entity.Cours;
 import com.centreformation.entity.Groupe;
-import com.centreformation.entity.SessionPedagogique;
 import com.centreformation.entity.Specialite;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,13 +20,20 @@ public interface GroupeRepository extends JpaRepository<Groupe, Long> {
     
     boolean existsByCode(String code);
     
-    List<Groupe> findBySessionPedagogique(SessionPedagogique sessionPedagogique);
+    // Trouver les groupes d'un cours
+    List<Groupe> findByCours(Cours cours);
+    
+    List<Groupe> findByCoursId(Long coursId);
     
     List<Groupe> findBySpecialite(Specialite specialite);
     
-    Page<Groupe> findBySessionPedagogiqueId(Long sessionId, Pageable pageable);
+    // Trouver les groupes par session pédagogique (via cours)
+    @Query("SELECT g FROM Groupe g WHERE g.cours.sessionPedagogique.id = :sessionId")
+    Page<Groupe> findBySessionPedagogiqueId(@Param("sessionId") Long sessionId, Pageable pageable);
     
     Page<Groupe> findBySpecialiteId(Long specialiteId, Pageable pageable);
+    
+    Page<Groupe> findByCoursId(Long coursId, Pageable pageable);
     
     @Query("SELECT g FROM Groupe g WHERE " +
            "LOWER(g.nom) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +

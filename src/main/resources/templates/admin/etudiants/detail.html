@@ -78,20 +78,25 @@
                 </div>
             </div>
 
-            <!-- Groupes -->
+            <!-- Groupes via inscriptions -->
             <div class="card mt-3">
                 <div class="card-header">
-                    <i class="bi bi-diagram-3"></i> Groupes 
-                    <span class="badge bg-primary" th:text="${etudiant.groupes.size()}">0</span>
+                    <i class="bi bi-diagram-3"></i> Groupes (via inscriptions validées)
+                    <span class="badge bg-primary" 
+                          th:with="groupesValidees=${etudiant.inscriptions.?[statut.name() == 'VALIDEE' && groupe != null]}" 
+                          th:text="${groupesValidees.size()}">0</span>
                 </div>
                 <div class="card-body">
-                    <div th:if="${etudiant.groupes.isEmpty()}" class="text-muted">
+                    <div th:with="groupesValidees=${etudiant.inscriptions.?[statut.name() == 'VALIDEE' && groupe != null]}" 
+                         th:if="${groupesValidees.isEmpty()}" class="text-muted">
                         <i class="bi bi-info-circle"></i> Aucun groupe assigné
                     </div>
-                    <div th:unless="${etudiant.groupes.isEmpty()}">
-                        <div th:each="groupe : ${etudiant.groupes}" class="mb-2">
-                            <span class="badge bg-secondary me-1" th:text="${groupe.nom}"></span>
-                            <small th:if="${groupe.code}" class="text-muted" th:text="'(' + ${groupe.code} + ')'"></small>
+                    <div th:with="groupesValidees=${etudiant.inscriptions.?[statut.name() == 'VALIDEE' && groupe != null]}" 
+                         th:unless="${groupesValidees.isEmpty()}">
+                        <div th:each="inscription : ${groupesValidees}" class="mb-2">
+                            <span class="badge bg-secondary me-1" th:text="${inscription.groupe.nom}"></span>
+                            <small th:if="${inscription.groupe.code}" class="text-muted" th:text="'(' + ${inscription.groupe.code} + ')'"></small>
+                            <br><small class="text-muted" th:text="'Cours: ' + ${inscription.cours.titre}"></small>
                         </div>
                     </div>
                 </div>

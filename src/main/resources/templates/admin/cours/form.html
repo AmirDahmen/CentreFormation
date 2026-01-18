@@ -75,31 +75,18 @@
                             </div>
                         </div>
 
-                        <hr class="my-4">
-
-                        <!-- Groupes -->
-                        <h5 class="mb-3"><i class="bi bi-diagram-3"></i> Assignation aux groupes</h5>
-                        <p class="text-muted">Sélectionnez les groupes qui suivront ce cours</p>
-                        
-                        <div class="mb-3" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem;">
-                            <div th:if="${groupes.empty}" class="text-center text-muted">
-                                <i class="bi bi-inbox"></i> Aucun groupe disponible
-                            </div>
-                            <div th:each="groupe : ${groupes}" class="form-check mb-2">
-                                <input type="checkbox" 
-                                       th:id="'groupe_' + ${groupe.id}"
-                                       name="groupeIds"
-                                       th:value="${groupe.id}"
-                                       th:checked="${cours.groupes != null && cours.groupes.contains(groupe)}"
-                                       class="form-check-input">
-                                <label th:for="'groupe_' + ${groupe.id}" class="form-check-label">
-                                    <strong th:text="${groupe.nom}"></strong>
-                                    <span th:if="${groupe.specialite}" class="badge bg-info ms-2" 
-                                          th:text="${groupe.specialite.nom}"></span>
-                                    <span th:if="${groupe.sessionPedagogique}" class="badge bg-secondary ms-1" 
-                                          th:text="${groupe.sessionPedagogique.anneeScolaire}"></span>
-                                </label>
-                            </div>
+                        <div class="mb-3">
+                            <label for="sessionPedagogique" class="form-label">Session pédagogique *</label>
+                            <select id="sessionPedagogique" th:field="*{sessionPedagogique}" 
+                                    class="form-select" required>
+                                <option value="">Sélectionner une session pédagogique</option>
+                                <option th:each="session : ${sessions}" 
+                                        th:value="${session.id}" 
+                                        th:text="${session.anneeScolaire + ' - ' + session.semestre}">
+                                </option>
+                            </select>
+                            <div class="invalid-feedback">La session pédagogique est requise</div>
+                            <small class="text-muted">Les groupes seront créés séparément et associés à ce cours</small>
                         </div>
 
                         <hr class="my-4">

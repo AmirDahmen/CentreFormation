@@ -37,29 +37,60 @@
         </div>
     </div>
 
+    <!-- Alertes -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-2"></i>[[${successMessage}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle me-2"></i>[[${errorMessage}]]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <!-- Info cours -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card border-0 text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-center p-3">
-                    <h4 class="fw-bold mb-0" th:text="${inscriptions.size()}">0</h4>
-                    <small class="opacity-75">Étudiants inscrits</small>
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-white-50 text-uppercase small fw-semibold mb-1">Étudiants inscrits</p>
+                            <h2 class="fw-bold mb-0" th:text="${inscriptions.size()}">0</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="bi bi-people fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 text-white" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                <div class="card-body text-center p-3">
-                    <h4 class="fw-bold mb-0" th:text="${notes.size()}">0</h4>
-                    <small class="opacity-75">Notes saisies</small>
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-white-50 text-uppercase small fw-semibold mb-1">Notes saisies</p>
+                            <h2 class="fw-bold mb-0" th:text="${notes.size()}">0</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="bi bi-check-circle fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 text-white" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <div class="card-body text-center p-3">
-                    <h4 class="fw-bold mb-0" th:text="${inscriptions.size() - notes.size()}">0</h4>
-                    <small class="opacity-75">Notes manquantes</small>
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-white-50 text-uppercase small fw-semibold mb-1">Notes manquantes</p>
+                            <h2 class="fw-bold mb-0" th:text="${inscriptions.size() - notes.size()}">0</h2>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                            <i class="bi bi-exclamation-triangle fs-4"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -94,7 +125,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="inscription : ${inscriptions}">
+                        <tr th:each="inscription : ${inscriptions}" th:if="${inscription.etudiant != null}">
                             <td>
                                 <code th:text="${inscription.etudiant.matricule}"></code>
                             </td>
@@ -103,24 +134,28 @@
                                     <span th:text="${inscription.etudiant.prenom + ' ' + inscription.etudiant.nom}"></span>
                                 </a>
                             </td>
+                            <!-- Note actuelle -->
                             <td class="text-center">
-                                <th:block th:with="noteExistante=${notes.?[etudiant.id == inscription.etudiant.id]}">
-                                    <span th:if="${!noteExistante.empty}" 
-                                          th:class="${noteExistante[0].valeur >= 10 ? 'badge bg-success fs-6' : 'badge bg-danger fs-6'}"
-                                          th:text="${noteExistante[0].valeur + '/20'}">-</span>
-                                    <span th:if="${noteExistante.empty}" class="text-muted">Non noté</span>
+                                <th:block th:with="noteEtudiant=${notesParEtudiant[inscription.etudiant.id]}">
+                                    <span th:if="${noteEtudiant != null}" 
+                                          th:class="${noteEtudiant.valeur >= 10 ? 'badge bg-success fs-6' : 'badge bg-danger fs-6'}"
+                                          th:text="${noteEtudiant.valeur + '/20'}">-</span>
+                                    <span th:if="${noteEtudiant == null}" class="text-muted">Non noté</span>
                                 </th:block>
                             </td>
+                            <!-- Commentaire -->
                             <td>
-                                <th:block th:with="noteExistante=${notes.?[etudiant.id == inscription.etudiant.id]}">
-                                    <small th:if="${!noteExistante.empty && noteExistante[0].commentaire != null}" 
-                                           th:text="${noteExistante[0].commentaire}" class="text-muted"></small>
+                                <th:block th:with="noteEtudiant=${notesParEtudiant[inscription.etudiant.id]}">
+                                    <small th:if="${noteEtudiant != null && noteEtudiant.commentaire != null}" 
+                                           th:text="${noteEtudiant.commentaire}" class="text-muted"></small>
+                                    <span th:if="${noteEtudiant == null || noteEtudiant.commentaire == null}" class="text-muted">-</span>
                                 </th:block>
                             </td>
+                            <!-- Actions -->
                             <td>
-                                <th:block th:with="noteExistante=${notes.?[etudiant.id == inscription.etudiant.id]}">
+                                <th:block th:with="noteEtudiant=${notesParEtudiant[inscription.etudiant.id]}">
                                     <!-- Formulaire de saisie si pas de note -->
-                                    <form th:if="${noteExistante.empty}" th:action="@{/admin/notes/saisir}" method="post" class="d-flex gap-2">
+                                    <form th:if="${noteEtudiant == null}" th:action="@{/admin/notes/saisir}" method="post" class="d-flex gap-2">
                                         <input type="hidden" name="etudiantId" th:value="${inscription.etudiant.id}">
                                         <input type="hidden" name="coursId" th:value="${cours.id}">
                                         <input type="number" name="valeur" class="form-control form-control-sm" 
@@ -133,16 +168,16 @@
                                     </form>
                                     
                                     <!-- Formulaire de modification si note existe -->
-                                    <form th:if="${!noteExistante.empty}" th:action="@{/admin/notes/{id}/modifier(id=${noteExistante[0].id})}" 
+                                    <form th:if="${noteEtudiant != null}" th:action="@{/admin/notes/{id}/modifier(id=${noteEtudiant.id})}" 
                                           method="post" class="d-flex gap-2">
                                         <input type="number" name="valeur" class="form-control form-control-sm" 
-                                               th:value="${noteExistante[0].valeur}" min="0" max="20" step="0.25" required style="width: 80px;">
+                                               th:value="${noteEtudiant.valeur}" min="0" max="20" step="0.25" required style="width: 80px;">
                                         <input type="text" name="commentaire" class="form-control form-control-sm" 
-                                               th:value="${noteExistante[0].commentaire}" placeholder="Commentaire" style="width: 120px;">
+                                               th:value="${noteEtudiant.commentaire}" placeholder="Commentaire" style="width: 120px;">
                                         <button type="submit" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <a th:href="@{/admin/notes/{id}/supprimer(id=${noteExistante[0].id})}" 
+                                        <a th:href="@{/admin/notes/{id}/supprimer(id=${noteEtudiant.id})}" 
                                            class="btn btn-sm btn-outline-danger"
                                            onclick="return confirm('Supprimer cette note ?')">
                                             <i class="bi bi-trash"></i>

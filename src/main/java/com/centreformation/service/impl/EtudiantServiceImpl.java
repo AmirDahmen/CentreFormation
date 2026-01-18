@@ -2,14 +2,20 @@ package com.centreformation.service.impl;
 
 import com.centreformation.entity.Etudiant;
 import com.centreformation.entity.Groupe;
+import com.centreformation.entity.Role;
 import com.centreformation.entity.Specialite;
+import com.centreformation.entity.Utilisateur;
 import com.centreformation.repository.EtudiantRepository;
 import com.centreformation.repository.GroupeRepository;
+import com.centreformation.repository.RoleRepository;
 import com.centreformation.repository.SpecialiteRepository;
+import com.centreformation.repository.UtilisateurRepository;
 import com.centreformation.service.EtudiantService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,11 +26,15 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class EtudiantServiceImpl implements EtudiantService {
 
     private final EtudiantRepository etudiantRepository;
     private final GroupeRepository groupeRepository;
     private final SpecialiteRepository specialiteRepository;
+    private final UtilisateurRepository utilisateurRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public List<Etudiant> findAll() {
@@ -73,7 +83,61 @@ public class EtudiantServiceImpl implements EtudiantService {
             throw new RuntimeException("Un étudiant avec cet email existe déjà");
         }
         
+        // Si pas d'utilisateur lié, créer automatiquement un compte
+        if (etudiant.getUtilisateur() == null) {
+            Utilisateur utilisateur = createUtilisateurForEtudiant(etudiant);
+            etudiant.setUtilisateur(utilisateur);
+        }
+        
         return etudiantRepository.save(etudiant);
+    }
+    
+    /**
+     * Crée automatiquement un compte utilisateur pour un étudiant
+     */
+    private Utilisateur createUtilisateurForEtudiant(Etudiant etudiant) {
+        // Vérifier si un utilisateur avec cet email existe déjà
+        if (utilisateurRepository.existsByEmail(etudiant.getEmail())) {
+            // Lier au compte existant
+            Utilisateur existing = utilisateurRepository.findByEmail(etudiant.getEmail()).orElse(null);
+            if (existing != null) {
+                log.info("Liaison de l'étudiant {} à l'utilisateur existant {}", etudiant.getEmail(), existing.getUsername());
+                return existing;
+            }
+        }
+        
+        // Générer un username unique basé sur prénom.nom
+        String baseUsername = (etudiant.getPrenom().toLowerCase() + "." + etudiant.getNom().toLowerCase())
+                .replaceAll("[^a-z0-9.]", "");
+        String username = baseUsername;
+        int counter = 1;
+        while (utilisateurRepository.existsByUsername(username)) {
+            username = baseUsername + counter++;
+        }
+        
+        // Créer le rôle ETUDIANT s'il n'existe pas
+        Role roleEtudiant = roleRepository.findByNom("ETUDIANT")
+                .orElseGet(() -> roleRepository.save(new Role("ETUDIANT")));
+        
+        Set<Role> roles = new HashSet<>();
+        roles.add(roleEtudiant);
+        
+        // Mot de passe par défaut: prenom123 (l'étudiant devra le changer)
+        String defaultPassword = etudiant.getPrenom().toLowerCase() + "123";
+        
+        Utilisateur utilisateur = Utilisateur.builder()
+                .username(username)
+                .email(etudiant.getEmail())
+                .password(passwordEncoder.encode(defaultPassword))
+                .actif(true)
+                .roles(roles)
+                .build();
+        
+        utilisateur = utilisateurRepository.save(utilisateur);
+        log.info("Compte utilisateur créé automatiquement pour l'étudiant: {} (username: {}, mot de passe par défaut: {})", 
+                etudiant.getEmail(), username, defaultPassword);
+        
+        return utilisateur;
     }
 
     @Override

@@ -27,6 +27,8 @@ public interface SeanceCoursService {
 
     List<SeanceCours> findByFormateurAndDateBetween(Long formateurId, LocalDate debut, LocalDate fin);
 
+    List<SeanceCours> findByGroupeAndDateBetween(Long groupeId, LocalDate debut, LocalDate fin);
+
     /**
      * Récupère l'emploi du temps d'un étudiant pour une période donnée
      */

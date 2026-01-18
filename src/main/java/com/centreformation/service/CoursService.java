@@ -20,6 +20,8 @@ public interface CoursService {
     Page<Cours> search(String keyword, Pageable pageable);
 
     Page<Cours> findByFormateur(Long formateurId, Pageable pageable);
+    
+    List<Cours> findAllByFormateur(Long formateurId);
 
     List<Cours> findByGroupe(Long groupeId);
 

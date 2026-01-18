@@ -153,8 +153,9 @@
                                             <span th:if="${groupe.code}" class="text-muted ms-2">
                                                 (<span th:text="${groupe.code}"></span>)
                                             </span>
-                                            <span th:if="${groupe.specialite}" class="badge bg-info ms-2" 
-                                                  th:text="${groupe.specialite.nom}"></span>
+                                            <span th:if="${groupe.cours}" class="badge bg-success ms-2" 
+                                                  th:text="${groupe.cours.titre}"></span>
+                                            <span class="badge bg-secondary ms-1" th:text="${groupe.placesRestantes} + '/' + ${groupe.capacite}"></span>
                                         </label>
                                     </div>
                                 </div>

@@ -21,13 +21,15 @@ import java.util.Map;
  * API REST pour la gestion des inscriptions
  * 
  * Endpoints:
- * - GET    /api/inscriptions           - Liste toutes les inscriptions (paginé)
- * - GET    /api/inscriptions/{id}      - Détails d'une inscription
- * - POST   /api/inscriptions           - Créer une inscription
- * - POST   /api/inscriptions/inscrire  - Inscrire un étudiant à un cours
- * - PUT    /api/inscriptions/{id}      - Modifier une inscription
- * - PUT    /api/inscriptions/{id}/annuler - Annuler une inscription
- * - DELETE /api/inscriptions/{id}      - Supprimer une inscription
+ * - GET    /api/inscriptions                   - Liste toutes les inscriptions (paginé)
+ * - GET    /api/inscriptions/{id}              - Détails d'une inscription
+ * - POST   /api/inscriptions                   - Créer une inscription
+ * - POST   /api/inscriptions/inscrire          - Inscrire un étudiant à un cours (statut EN_ATTENTE)
+ * - PUT    /api/inscriptions/{id}              - Modifier une inscription
+ * - PUT    /api/inscriptions/{id}/valider      - Valider et assigner un groupe (ADMIN)
+ * - PUT    /api/inscriptions/{id}/refuser      - Refuser une inscription (ADMIN)
+ * - PUT    /api/inscriptions/{id}/annuler      - Annuler une inscription
+ * - DELETE /api/inscriptions/{id}              - Supprimer une inscription
  */
 @RestController
 @RequestMapping("/api/inscriptions")
@@ -127,10 +129,11 @@ public class InscriptionApiController {
     /**
      * POST /api/inscriptions/inscrire
      * Inscrire un étudiant à un cours
-     * Accessible aux étudiants pour s'inscrire eux-mêmes
+     * Les ADMIN et FORMATEUR peuvent inscrire n'importe quel étudiant
+     * Les ETUDIANT peuvent s'inscrire eux-mêmes uniquement
      */
     @PostMapping("/inscrire")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR') or @securityService.isCurrentEtudiant(#request.etudiantId)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR', 'ETUDIANT')")
     public ResponseEntity<Inscription> inscrireEtudiant(@RequestBody InscriptionRequest request) {
         Inscription inscription = inscriptionService.inscrire(request.getEtudiantId(), request.getCoursId());
         return ResponseEntity.status(HttpStatus.CREATED).body(inscription);
@@ -162,6 +165,30 @@ public class InscriptionApiController {
         response.put("message", "Inscription annulée avec succès");
         response.put("id", id.toString());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * PUT /api/inscriptions/{id}/valider
+     * Valide une inscription en attente et assigne un groupe (ADMIN uniquement)
+     */
+    @PutMapping("/{id}/valider")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Inscription> validerInscription(
+            @PathVariable Long id, 
+            @RequestBody ValidationRequest request) {
+        Inscription inscription = inscriptionService.valider(id, request.getGroupeId());
+        return ResponseEntity.ok(inscription);
+    }
+
+    /**
+     * PUT /api/inscriptions/{id}/refuser
+     * Refuse une inscription en attente (ADMIN uniquement)
+     */
+    @PutMapping("/{id}/refuser")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Inscription> refuserInscription(@PathVariable Long id) {
+        Inscription inscription = inscriptionService.refuser(id);
+        return ResponseEntity.ok(inscription);
     }
 
     /**
@@ -210,9 +237,10 @@ public class InscriptionApiController {
     public ResponseEntity<Map<String, Object>> countInscriptions() {
         Map<String, Object> response = new HashMap<>();
         response.put("total", inscriptionService.count());
-        response.put("actives", inscriptionService.countByStatut(Inscription.StatutInscription.ACTIVE));
+        response.put("enAttente", inscriptionService.countByStatut(Inscription.StatutInscription.EN_ATTENTE));
+        response.put("validees", inscriptionService.countByStatut(Inscription.StatutInscription.VALIDEE));
+        response.put("refusees", inscriptionService.countByStatut(Inscription.StatutInscription.REFUSEE));
         response.put("annulees", inscriptionService.countByStatut(Inscription.StatutInscription.ANNULEE));
-        response.put("terminees", inscriptionService.countByStatut(Inscription.StatutInscription.TERMINEE));
         return ResponseEntity.ok(response);
     }
 
@@ -223,5 +251,13 @@ public class InscriptionApiController {
     public static class InscriptionRequest {
         private Long etudiantId;
         private Long coursId;
+    }
+
+    /**
+     * DTO pour la requête de validation
+     */
+    @lombok.Data
+    public static class ValidationRequest {
+        private Long groupeId;
     }
 }

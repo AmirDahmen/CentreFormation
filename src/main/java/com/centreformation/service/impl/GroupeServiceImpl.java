@@ -54,7 +54,9 @@ public class GroupeServiceImpl implements GroupeService {
 
     @Override
     public List<Groupe> findBySessionPedagogique(SessionPedagogique session) {
-        return groupeRepository.findBySessionPedagogique(session);
+        // Dans le nouveau modèle, les groupes sont liés via Cours
+        // On récupère les groupes des cours de la session
+        return groupeRepository.findBySessionPedagogiqueId(session.getId(), Pageable.unpaged()).getContent();
     }
 
     @Override
@@ -105,8 +107,9 @@ public class GroupeServiceImpl implements GroupeService {
         
         existing.setNom(groupe.getNom());
         existing.setCode(groupe.getCode());
-        existing.setSessionPedagogique(groupe.getSessionPedagogique());
+        existing.setCours(groupe.getCours()); // NOUVEAU: un groupe appartient à UN cours
         existing.setSpecialite(groupe.getSpecialite());
+        existing.setCapacite(groupe.getCapacite());
         
         return groupeRepository.save(existing);
     }

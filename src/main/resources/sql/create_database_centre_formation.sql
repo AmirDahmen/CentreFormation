@@ -68,6 +68,7 @@ CREATE TABLE groupes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
     code VARCHAR(20) UNIQUE,
+    capacite INT DEFAULT 30,
     session_pedagogique_id BIGINT,
     specialite_id BIGINT,
     CONSTRAINT fk_groupe_session FOREIGN KEY (session_pedagogique_id) REFERENCES sessions_pedagogiques(id) ON DELETE SET NULL,
@@ -129,17 +130,20 @@ CREATE TABLE cours (
     INDEX idx_cours_titre (titre)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Table: inscriptions
+-- Table: inscriptions (avec workflow de validation)
 CREATE TABLE inscriptions (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     date_inscription DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    statut VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    date_validation DATETIME NULL,
+    statut VARCHAR(20) NOT NULL DEFAULT 'EN_ATTENTE',
     etudiant_id BIGINT NOT NULL,
     cours_id BIGINT NOT NULL,
+    groupe_id BIGINT NULL,
     CONSTRAINT fk_inscription_etudiant FOREIGN KEY (etudiant_id) REFERENCES etudiants(id) ON DELETE CASCADE,
     CONSTRAINT fk_inscription_cours FOREIGN KEY (cours_id) REFERENCES cours(id) ON DELETE CASCADE,
+    CONSTRAINT fk_inscription_groupe FOREIGN KEY (groupe_id) REFERENCES groupes(id) ON DELETE SET NULL,
     CONSTRAINT uk_inscription_etudiant_cours UNIQUE (etudiant_id, cours_id),
-    CONSTRAINT chk_inscription_statut CHECK (statut IN ('ACTIVE', 'ANNULEE', 'TERMINEE')),
+    CONSTRAINT chk_inscription_statut CHECK (statut IN ('EN_ATTENTE', 'VALIDEE', 'REFUSEE', 'ANNULEE')),
     INDEX idx_inscription_date (date_inscription),
     INDEX idx_inscription_statut (statut)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

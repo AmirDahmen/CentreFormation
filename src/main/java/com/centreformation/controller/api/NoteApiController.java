@@ -108,14 +108,14 @@ public class NoteApiController {
 
     /**
      * PUT /api/notes/{id}
-     * Modifie une note existante
+     * Modifie une note existante (version simplifiée)
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR')")
     public ResponseEntity<Note> updateNote(
             @PathVariable Long id, 
-            @Valid @RequestBody Note note) {
-        Note updated = noteService.update(id, note);
+            @RequestBody UpdateNoteRequest request) {
+        Note updated = noteService.updateSimple(id, request.getValeur(), request.getCommentaire());
         return ResponseEntity.ok(updated);
     }
 
@@ -234,6 +234,73 @@ public class NoteApiController {
     }
 
     /**
+     * POST /api/notes/double-saisie
+     * Effectue une saisie dans le processus de double saisie
+     * - Si c'est la première saisie : enregistre saisie1
+     * - Si c'est la deuxième saisie : enregistre saisie2 et compare
+     */
+    @PostMapping("/double-saisie")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR')")
+    public ResponseEntity<Map<String, Object>> doubleSaisie(@RequestBody DoubleSaisieRequest request) {
+        Map<String, Object> result = noteService.effectuerDoubleSaisie(
+                request.getEtudiantId(),
+                request.getCoursId(),
+                request.getValeur(),
+                request.getCommentaire(),
+                request.getFormateurId(),
+                request.getNumeroSaisie()
+        );
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * POST /api/notes/valider-conflit
+     * Valide manuellement une note en conflit (Admin seulement)
+     */
+    @PostMapping("/valider-conflit")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Note> validerConflit(@RequestBody ValiderConflitRequest request) {
+        Note note = noteService.validerConflitNote(
+                request.getNoteId(),
+                request.getValeurFinale()
+        );
+        return ResponseEntity.ok(note);
+    }
+
+    /**
+     * GET /api/notes/conflits
+     * Liste toutes les notes en conflit
+     */
+    @GetMapping("/conflits")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR')")
+    public ResponseEntity<List<Note>> getNotesEnConflit() {
+        List<Note> conflits = noteService.findNotesEnConflit();
+        return ResponseEntity.ok(conflits);
+    }
+
+    /**
+     * GET /api/notes/en-attente-saisie2
+     * Liste les notes en attente de deuxième saisie
+     */
+    @GetMapping("/en-attente-saisie2")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR')")
+    public ResponseEntity<List<Note>> getNotesEnAttenteSaisie2() {
+        List<Note> notes = noteService.findNotesEnAttenteSaisie2();
+        return ResponseEntity.ok(notes);
+    }
+
+    /**
+     * GET /api/notes/statut-saisie/cours/{coursId}
+     * Récupère le statut de double saisie pour toutes les notes d'un cours
+     */
+    @GetMapping("/statut-saisie/cours/{coursId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'FORMATEUR')")
+    public ResponseEntity<List<Map<String, Object>>> getStatutSaisieParCours(@PathVariable Long coursId) {
+        List<Map<String, Object>> statuts = noteService.getStatutSaisieParCours(coursId);
+        return ResponseEntity.ok(statuts);
+    }
+
+    /**
      * DTO pour la saisie de note
      */
     @lombok.Data
@@ -243,5 +310,36 @@ public class NoteApiController {
         private Double valeur;
         private String commentaire;
         private Long formateurId;
+    }
+
+    /**
+     * DTO pour la mise à jour simplifiée d'une note
+     */
+    @lombok.Data
+    public static class UpdateNoteRequest {
+        private Double valeur;
+        private String commentaire;
+    }
+
+    /**
+     * DTO pour la double saisie
+     */
+    @lombok.Data
+    public static class DoubleSaisieRequest {
+        private Long etudiantId;
+        private Long coursId;
+        private Double valeur;
+        private String commentaire;
+        private Long formateurId;
+        private Integer numeroSaisie; // 1 ou 2
+    }
+
+    /**
+     * DTO pour valider un conflit
+     */
+    @lombok.Data
+    public static class ValiderConflitRequest {
+        private Long noteId;
+        private Double valeurFinale;
     }
 }

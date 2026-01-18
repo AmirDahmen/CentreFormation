@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/admin}">
+<head>
+    <title>Planification des Séances</title>
+    <style>
+        :root {
+            --slot-height: 70px;
+            --time-col-width: 60px;
+        }
+
+        /* ========== BREADCRUMB ========== */
+        .breadcrumb-nav {
+            background: white;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .breadcrumb-nav ol {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .breadcrumb-nav li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .breadcrumb-nav li a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .breadcrumb-nav li a:hover { text-decoration: underline; }
+        .breadcrumb-nav li.active { color: #1e293b; font-weight: 600; }
+        .breadcrumb-nav li i.separator { color: #cbd5e1; font-size: 0.7rem; }
+
+        /* ========== ÉTAPE 1 & 2 : CARDS ========== */
+        .selection-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .selection-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        .selection-header p {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .selection-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .selection-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+        .selection-card .icon-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .selection-card .icon-box.specialite {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .selection-card .icon-box.groupe {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .selection-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        .selection-card .meta {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .selection-card .meta i { margin-right: 0.3rem; }
+        .selection-card .arrow {
+            margin-top: 1rem;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        /* ========== ÉTAPE 3 : GRILLE ========== */
+        .planning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: white;
+            padding: 1rem 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .planning-header .groupe-info h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+        .planning-header .groupe-info .badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            margin-left: 0.5rem;
+        }
+
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .week-nav .btn-nav {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .week-nav .btn-nav:hover {
+            background: #667eea;
+            color: white;
+        }
+        .week-nav .current-week {
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+
+        .planning-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 1.25rem;
+        }
+
+        /* Sidebar cours */
+        .cours-sidebar {
+            background: white;
+            border-radius: 14px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .sidebar-title i { color: #667eea; margin-right: 0.4rem; }
+
+        .cours-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .cours-item {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .cours-item:hover {
+            border-color: #667eea;
+            transform: translateX(3px);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.15);
+        }
+        .cours-item:active { cursor: grabbing; }
+        .cours-item.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+        .cours-item .code {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .cours-item .nom {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 0.15rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .cours-item .formateur {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+        .cours-item .formateur i { font-size: 0.6rem; }
+
+        .no-cours {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        .no-cours i { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+
+        /* Calendrier */
+        .calendar-box {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .cal-header {
+            display: grid;
+            grid-template-columns: var(--time-col-width) repeat(6, 1fr);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .cal-header .time-col {
+            padding: 0.6rem 0.4rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cal-header .day-col {
+            padding: 0.5rem 0.3rem;
+            text-align: center;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        .day-col .day-name {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.9;
+        }
+        .day-col .day-num {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .day-col.today { background: rgba(255,255,255,0.2); }
+
+        .cal-body {
+            display: grid;
+            grid-template-columns: var(--time-col-width) repeat(6, 1fr);
+        }
+
+        .time-cell {
+            padding: 0.3rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #64748b;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+            background: #f8fafc;
+            height: var(--slot-height);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 0.3rem;
+        }
+
+        .day-cell {
+            border-left: 1px solid #f1f5f9;
+            border-bottom: 1px solid #f1f5f9;
+            min-height: var(--slot-height);
+            position: relative;
+            transition: background 0.2s;
+        }
+        .day-cell:hover { background: rgba(102, 126, 234, 0.03); }
+        .day-cell.drag-over {
+            background: rgba(102, 126, 234, 0.12) !important;
+            outline: 2px dashed #667eea;
+            outline-offset: -2px;
+        }
+
+        /* Séances sur le calendrier */
+        .seance-block {
+            position: absolute;
+            left: 2px;
+            right: 2px;
+            top: 2px;
+            padding: 0.3rem 0.35rem;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            overflow: hidden;
+            border-left: 3px solid;
+            transition: all 0.2s;
+            z-index: 1;
+        }
+        .seance-block:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+        .seance-block .title {
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .seance-block .time { font-size: 0.55rem; opacity: 0.85; }
+        .seance-block .salle { font-size: 0.5rem; opacity: 0.75; margin-top: 1px; }
+
+        /* Couleurs séances */
+        .color-1 { background: #dbeafe; border-color: #3b82f6; color: #1e40af; }
+        .color-2 { background: #dcfce7; border-color: #22c55e; color: #166534; }
+        .color-3 { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+        .color-4 { background: #fce7f3; border-color: #ec4899; color: #9d174d; }
+        .color-5 { background: #e0e7ff; border-color: #6366f1; color: #3730a3; }
+        .color-6 { background: #ccfbf1; border-color: #14b8a6; color: #115e59; }
+        .color-7 { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+        .color-8 { background: #f3e8ff; border-color: #a855f7; color: #6b21a8; }
+
+        .cal-footer {
+            padding: 0.6rem 1rem;
+            background: #f8fafc;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        /* Modal */
+        .modal-content { border: none; border-radius: 14px; }
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.9rem 1.1rem;
+            border-radius: 14px 14px 0 0;
+        }
+        .modal-header .modal-title { font-weight: 700; font-size: 1rem; }
+        .modal-header .btn-close { filter: brightness(0) invert(1); opacity: 0.8; }
+        .modal-body { padding: 1.1rem; }
+        .modal-body .form-label { font-weight: 600; font-size: 0.8rem; color: #374151; }
+        .modal-body .form-control, .modal-body .form-select {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        .modal-body .form-control:focus, .modal-body .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .modal-footer { border: none; padding: 0.6rem 1.1rem 1.1rem; }
+        .modal-footer .btn { padding: 0.5rem 0.9rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
+
+        .alert-conflict {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1055;
+        }
+        .toast {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            min-width: 280px;
+        }
+        .toast.success .toast-header { background: #dcfce7; color: #166534; }
+        .toast.error .toast-header { background: #fee2e2; color: #991b1b; }
+
+        @media (max-width: 1000px) {
+            .planning-layout { grid-template-columns: 1fr; }
+            .cours-sidebar { position: static; }
+            .cours-list { flex-direction: row; flex-wrap: wrap; max-height: none; }
+            .cours-item { flex: 1 1 140px; }
+        }
+        @media (max-width: 700px) {
+            .calendar-box { overflow-x: auto; }
+            .cal-header, .cal-body { min-width: 600px; }
+        }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ==================== ÉTAPE 1: SÉLECTION SPÉCIALITÉ ==================== -->
+    <th:block th:if="${etape == 1}">
+        <nav class="breadcrumb-nav">
+            <ol>
+                <li class="active"><i class="bi bi-calendar3 me-1"></i> Planification</li>
+            </ol>
+        </nav>
+
+        <div class="selection-header">
+            <h1><i class="bi bi-mortarboard me-2" style="color:#667eea"></i>Sélectionnez une Spécialité</h1>
+            <p>Choisissez la spécialité pour voir ses groupes et planifier les séances</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(specialites)}" class="empty-state">
+            <i class="bi bi-folder-x"></i>
+            <h4>Aucune spécialité</h4>
+            <p>Créez d'abord des spécialités dans la gestion des spécialités</p>
+            <a th:href="@{/admin/specialites}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-lg"></i> Gérer les spécialités
+            </a>
+        </div>
+
+        <div class="cards-grid" th:unless="${#lists.isEmpty(specialites)}">
+            <a th:each="spec : ${specialites}" 
+               th:href="@{/admin/seances/specialite/{id}(id=${spec.id})}"
+               class="selection-card">
+                <div class="icon-box specialite">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <h3 th:text="${spec.nom}">Informatique</h3>
+                <p class="meta" th:if="${spec.description}" th:text="${#strings.abbreviate(spec.description, 60)}">Description...</p>
+                <p class="meta">
+                    <i class="bi bi-people"></i> 
+                    <span th:text="${#lists.size(spec.groupes)} + ' groupe(s)'">3 groupe(s)</span>
+                </p>
+                <div class="arrow">Voir les groupes <i class="bi bi-arrow-right"></i></div>
+            </a>
+        </div>
+    </th:block>
+
+    <!-- ==================== ÉTAPE 2: SÉLECTION GROUPE ==================== -->
+    <th:block th:if="${etape == 2}">
+        <nav class="breadcrumb-nav">
+            <ol>
+                <li><a th:href="@{/admin/seances}"><i class="bi bi-calendar3 me-1"></i> Planification</a></li>
+                <li><i class="bi bi-chevron-right separator"></i></li>
+                <li class="active" th:text="${specialite.nom}">Informatique</li>
+            </ol>
+        </nav>
+
+        <div class="selection-header">
+            <h1><i class="bi bi-people me-2" style="color:#11998e"></i>Groupes de <span th:text="${specialite.nom}">Informatique</span></h1>
+            <p>Sélectionnez un groupe pour voir et planifier son emploi du temps</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(groupes)}" class="empty-state">
+            <i class="bi bi-people-fill"></i>
+            <h4>Aucun groupe</h4>
+            <p>Cette spécialité n'a pas encore de groupes</p>
+            <a th:href="@{/admin/groupes}" class="btn btn-primary mt-2">
+                <i class="bi bi-plus-lg"></i> Gérer les groupes
+            </a>
+        </div>
+
+        <div class="cards-grid" th:unless="${#lists.isEmpty(groupes)}">
+            <a th:each="grp : ${groupes}" 
+               th:href="@{/admin/seances/groupe/{id}(id=${grp.id})}"
+               class="selection-card">
+                <div class="icon-box groupe">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h3 th:text="${grp.nom}">Groupe A</h3>
+                <p class="meta" th:if="${grp.code}">
+                    <i class="bi bi-hash"></i> <span th:text="${grp.code}">GRP-A</span>
+                </p>
+                <p class="meta">
+                    <i class="bi bi-person"></i> 
+                    <span th:text="${#lists.size(grp.etudiants)} + ' étudiant(s)'">25 étudiant(s)</span>
+                </p>
+                <p class="meta">
+                    <i class="bi bi-book"></i> 
+                    <span th:text="${#lists.size(grp.cours)} + ' cours assigné(s)'">5 cours</span>
+                </p>
+                <div class="arrow">Planifier <i class="bi bi-arrow-right"></i></div>
+            </a>
+        </div>
+    </th:block>
+
+    <!-- ==================== ÉTAPE 3: GRILLE DE PLANIFICATION ==================== -->
+    <th:block th:if="${etape == 3}">
+        <nav class="breadcrumb-nav">
+            <ol>
+                <li><a th:href="@{/admin/seances}"><i class="bi bi-calendar3 me-1"></i> Planification</a></li>
+                <li><i class="bi bi-chevron-right separator"></i></li>
+                <li><a th:href="@{/admin/seances/specialite/{id}(id=${specialite.id})}" th:text="${specialite.nom}">Informatique</a></li>
+                <li><i class="bi bi-chevron-right separator"></i></li>
+                <li class="active" th:text="${groupe.nom}">Groupe A</li>
+            </ol>
+        </nav>
+
+        <div class="planning-header">
+            <div class="groupe-info">
+                <h2>
+                    <i class="bi bi-calendar-week me-2" style="color:#667eea"></i>
+                    Emploi du temps - <span th:text="${groupe.nom}">Groupe A</span>
+                    <span class="badge" th:text="${specialite.nom}">Informatique</span>
+                </h2>
+            </div>
+            <div class="week-nav">
+                <a th:href="@{/admin/seances/groupe/{id}(id=${groupe.id}, date=${startOfWeek.minusWeeks(1)})}" class="btn-nav">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <span class="current-week" th:text="${#temporals.format(startOfWeek, 'd MMM')} + ' - ' + ${#temporals.format(endOfWeek, 'd MMM yyyy')}">13 - 18 Jan 2026</span>
+                <a th:href="@{/admin/seances/groupe/{id}(id=${groupe.id}, date=${startOfWeek.plusWeeks(1)})}" class="btn-nav">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="planning-layout">
+            <!-- Sidebar: Cours du groupe -->
+            <div class="cours-sidebar">
+                <div class="sidebar-title"><i class="bi bi-journal-bookmark"></i> Cours du groupe</div>
+                
+                <div th:if="${#lists.isEmpty(coursGroupe)}" class="no-cours">
+                    <i class="bi bi-journal-x"></i>
+                    Aucun cours assigné à ce groupe.<br>
+                    <a th:href="@{/admin/cours}" class="text-primary">Assigner des cours</a>
+                </div>
+                
+                <div class="cours-list" th:unless="${#lists.isEmpty(coursGroupe)}">
+                    <div th:each="c, stat : ${coursGroupe}" 
+                         class="cours-item" draggable="true"
+                         th:data-id="${c.id}" 
+                         th:data-code="${c.code}" 
+                         th:data-nom="${c.titre}"
+                         th:data-formateur="${c.formateur != null ? c.formateur.id : ''}"
+                         th:data-formateur-nom="${c.formateur != null ? c.formateur.nom + ' ' + c.formateur.prenom : ''}"
+                         th:data-color="${(stat.index % 8) + 1}">
+                        <div class="code" th:text="${c.code}">INF101</div>
+                        <div class="nom" th:text="${c.titre}">Programmation Java</div>
+                        <div class="formateur" th:if="${c.formateur}">
+                            <i class="bi bi-person"></i> <span th:text="${c.formateur.nom + ' ' + c.formateur.prenom}">M. Dupont</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 pt-3 border-top" style="font-size:0.7rem; color:#94a3b8;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Glissez un cours vers la grille pour créer une séance
+                </div>
+            </div>
+
+            <!-- Calendrier -->
+            <div class="calendar-box">
+                <div class="cal-header">
+                    <div class="time-col"><i class="bi bi-clock"></i></div>
+                    <div th:each="jour : ${joursSemaine}" class="day-col" 
+                         th:classappend="${jour.equals(T(java.time.LocalDate).now())} ? 'today' : ''">
+                        <div class="day-name" th:text="${#temporals.format(jour, 'EEE')}">Lun</div>
+                        <div class="day-num" th:text="${jour.dayOfMonth}">13</div>
+                    </div>
+                </div>
+
+                <div class="cal-body" id="calendarBody">
+                    <th:block th:each="h : ${#numbers.sequence(8, 17)}">
+                        <div class="time-cell" th:text="${h + ':00'}">8:00</div>
+                        <div th:each="jour : ${joursSemaine}" class="day-cell droppable"
+                             th:data-date="${jour}" th:data-hour="${h}">
+                        </div>
+                    </th:block>
+                </div>
+
+                <div class="cal-footer">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    Glissez un cours → créneau = nouvelle séance • Cliquez sur une séance pour la modifier/supprimer
+                </div>
+            </div>
+        </div>
+
+        <!-- Données pour JavaScript -->
+        <div id="planningData" 
+             th:data-groupe-id="${groupe.id}"
+             th:data-seances="${seancesJson}"
+             style="display:none;"></div>
+
+        <!-- Modal création/modification séance -->
+        <div class="modal fade" id="seanceModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i><span id="modalTitle">Nouvelle séance</span></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="seanceId">
+                        <input type="hidden" id="coursId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Cours</label>
+                            <input type="text" class="form-control" id="coursDisplay" readonly>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-4">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" id="mDate" required>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Début</label>
+                                <input type="time" class="form-control" id="mDebut" value="08:00" required>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Fin</label>
+                                <input type="time" class="form-control" id="mFin" value="10:00" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Formateur</label>
+                                <select class="form-select" id="mFormateur">
+                                    <option value="">-- Sélectionner --</option>
+                                    <option th:each="f : ${formateurs}" th:value="${f.id}" th:text="${f.nom + ' ' + f.prenom}"></option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Salle</label>
+                                <select class="form-select" id="mSalle">
+                                    <option value="">-- Chargement... --</option>
+                                </select>
+                                <small id="salleHint" class="text-muted" style="font-size:0.7rem;">
+                                    <i class="bi bi-info-circle"></i> Salles disponibles pour ce créneau
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div id="alertConflict" class="alert-conflict d-none">
+                            <i class="bi bi-exclamation-triangle me-1"></i><span id="conflictMsg"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-danger me-auto d-none" id="btnDelete" onclick="deleteSeance()">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-primary" onclick="saveSeance()">
+                            <i class="bi bi-check-lg"></i> Enregistrer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</div>
+
+<th:block layout:fragment="extra-js">
+<script th:if="${etape == 3}">
+(function() {
+    'use strict';
+    
+    // Récupérer les données depuis les attributs data-*
+    var dataEl = document.getElementById('planningData');
+    var groupeId = parseInt(dataEl.dataset.groupeId);
+    var seancesJson = dataEl.dataset.seances || '[]';
+    var seances = [];
+    try { 
+        seances = JSON.parse(seancesJson); 
+    } catch(e) { 
+        console.error('Parse error:', e);
+        seances = []; 
+    }
+    
+    var csrfToken = document.querySelector('meta[name="_csrf"]');
+    csrfToken = csrfToken ? csrfToken.content : '';
+    var csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+    csrfHeader = csrfHeader ? csrfHeader.content : 'X-CSRF-TOKEN';
+    
+    var currentSeanceId = null;
+    var currentCoursId = null;
+    var currentSalleId = null;
+    var draggedCours = null;
+    
+    console.log('=== SCRIPT LOADED ===');
+    console.log('GroupeId:', groupeId);
+    console.log('Seances count:', seances.length);
+    
+    // Attendre que le DOM soit prêt
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    
+    function init() {
+        console.log('=== INIT PLANNING ===');
+        setupDragAndDrop();
+        renderSeances();
+        setupModalEvents();
+    }
+    
+    function setupDragAndDrop() {
+        var coursItems = document.querySelectorAll('.cours-item');
+        var dayCells = document.querySelectorAll('.day-cell');
+        
+        console.log('Cours items trouvés:', coursItems.length);
+        console.log('Cellules jour trouvées:', dayCells.length);
+        
+        // DRAG - sur les cours
+        for (var i = 0; i < coursItems.length; i++) {
+            (function(item) {
+                item.draggable = true;
+                
+                item.ondragstart = function(e) {
+                    console.log('>>> DRAG START:', item.dataset.code);
+                    item.classList.add('dragging');
+                    draggedCours = {
+                        id: item.dataset.id,
+                        code: item.dataset.code,
+                        nom: item.dataset.nom,
+                        formateur: item.dataset.formateur || '',
+                        formateurNom: item.dataset.formateurNom || '',
+                        color: item.dataset.color || '1'
+                    };
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', item.dataset.id);
+                };
+                
+                item.ondragend = function(e) {
+                    console.log('>>> DRAG END');
+                    item.classList.remove('dragging');
+                    var overs = document.querySelectorAll('.drag-over');
+                    for (var j = 0; j < overs.length; j++) {
+                        overs[j].classList.remove('drag-over');
+                    }
+                };
+            })(coursItems[i]);
+        }
+        
+        // DROP - sur les cellules du calendrier
+        for (var k = 0; k < dayCells.length; k++) {
+            (function(cell) {
+                cell.ondragenter = function(e) {
+                    e.preventDefault();
+                    console.log('>>> DRAG ENTER:', cell.dataset.date, cell.dataset.hour);
+                    cell.classList.add('drag-over');
+                    return false;
+                };
+                
+                cell.ondragover = function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    cell.classList.add('drag-over');
+                    return false;
+                };
+                
+                cell.ondragleave = function(e) {
+                    cell.classList.remove('drag-over');
+                };
+                
+                cell.ondrop = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cell.classList.remove('drag-over');
+                    
+                    console.log('>>> DROP!', cell.dataset.date, cell.dataset.hour);
+                    console.log('draggedCours:', draggedCours);
+                    
+                    if (draggedCours) {
+                        openModal(null, draggedCours, cell.dataset.date, parseInt(cell.dataset.hour));
+                    }
+                    return false;
+                };
+            })(dayCells[k]);
+        }
+        
+        console.log('=== DRAG & DROP SETUP COMPLETE ===');
+    }
+    
+    function renderSeances() {
+        var blocks = document.querySelectorAll('.seance-block');
+        for (var i = 0; i < blocks.length; i++) {
+            blocks[i].remove();
+        }
+        
+        for (var j = 0; j < seances.length; j++) {
+            (function(s) {
+                var cell = document.querySelector('.day-cell[data-date="' + s.date + '"][data-hour="' + s.heureDebut + '"]');
+                if (cell) {
+                    var duree = s.heureFin - s.heureDebut;
+                    var height = (duree * 70) - 4;
+                    
+                    var div = document.createElement('div');
+                    div.className = 'seance-block color-' + ((s.coursId % 8) + 1);
+                    div.style.height = height + 'px';
+                    div.innerHTML = '<div class="title">' + s.coursCode + '</div>' +
+                        '<div class="time">' + String(s.heureDebut).padStart(2,'0') + ':00 - ' + String(s.heureFin).padStart(2,'0') + ':00</div>' +
+                        (s.salle ? '<div class="salle">📍 ' + s.salle + '</div>' : '') +
+                        (s.formateurNom ? '<div class="salle">👤 ' + s.formateurNom + '</div>' : '');
+                    
+                    div.onclick = function() { openModalEdit(s); };
+                    cell.appendChild(div);
+                }
+            })(seances[j]);
+        }
+    }
+    
+    function setupModalEvents() {
+        var debutInput = document.getElementById('mDebut');
+        var finInput = document.getElementById('mFin');
+        var dateInput = document.getElementById('mDate');
+        
+        if (debutInput) {
+            debutInput.onchange = function() {
+                var h = parseInt(this.value.split(':')[0]);
+                document.getElementById('mFin').value = String(h + 2).padStart(2, '0') + ':00';
+                loadSallesDisponibles();
+            };
+        }
+        
+        if (finInput) {
+            finInput.onchange = function() {
+                loadSallesDisponibles();
+            };
+        }
+        
+        if (dateInput) {
+            dateInput.onchange = function() {
+                loadSallesDisponibles();
+            };
+        }
+    }
+    
+    // Charger les salles disponibles pour le créneau sélectionné
+    function loadSallesDisponibles() {
+        var date = document.getElementById('mDate').value;
+        var debut = document.getElementById('mDebut').value;
+        var fin = document.getElementById('mFin').value;
+        var salleSelect = document.getElementById('mSalle');
+        var salleHint = document.getElementById('salleHint');
+        
+        if (!date || !debut || !fin) {
+            salleSelect.innerHTML = '<option value="">-- Sélectionnez date/heures d\'abord --</option>';
+            return;
+        }
+        
+        var heureDebut = parseInt(debut.split(':')[0]);
+        var heureFin = parseInt(fin.split(':')[0]);
+        
+        var url = '/admin/seances/api/salles-disponibles?date=' + date + 
+                  '&heureDebut=' + heureDebut + '&heureFin=' + heureFin;
+        
+        // Si on modifie une séance, exclure cette séance de la vérification de disponibilité
+        if (currentSeanceId) {
+            url += '&excludeSeanceId=' + currentSeanceId;
+        }
+        
+        salleSelect.innerHTML = '<option value="">Chargement...</option>';
+        
+        var headers = {};
+        headers[csrfHeader] = csrfToken;
+        
+        fetch(url, { headers: headers })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success && data.salles) {
+                    salleSelect.innerHTML = '<option value="">-- Aucune salle --</option>';
+                    
+                    if (data.salles.length === 0) {
+                        salleHint.innerHTML = '<i class="bi bi-exclamation-triangle text-warning"></i> Aucune salle disponible pour ce créneau';
+                    } else {
+                        salleHint.innerHTML = '<i class="bi bi-check-circle text-success"></i> ' + data.salles.length + ' salle(s) disponible(s)';
+                        
+                        for (var i = 0; i < data.salles.length; i++) {
+                            var s = data.salles[i];
+                            var opt = document.createElement('option');
+                            opt.value = s.id;
+                            opt.textContent = s.display;
+                            salleSelect.appendChild(opt);
+                        }
+                        
+                        // Pré-sélectionner la salle actuelle si elle existe et est disponible
+                        if (currentSalleId) {
+                            salleSelect.value = currentSalleId;
+                        }
+                    }
+                } else {
+                    salleSelect.innerHTML = '<option value="">Erreur chargement</option>';
+                }
+            })
+            .catch(function(e) {
+                console.error('Erreur chargement salles:', e);
+                salleSelect.innerHTML = '<option value="">Erreur</option>';
+            });
+    }
+    
+    function openModal(id, cours, date, hour) {
+        currentSeanceId = id;
+        currentCoursId = cours ? cours.id : null;
+        currentSalleId = null;
+        
+        document.getElementById('modalTitle').textContent = id ? 'Modifier la séance' : 'Nouvelle séance';
+        document.getElementById('seanceId').value = id || '';
+        document.getElementById('coursId').value = cours ? cours.id : '';
+        document.getElementById('coursDisplay').value = cours ? (cours.code + ' - ' + cours.nom) : '';
+        document.getElementById('mDate').value = date || '';
+        document.getElementById('mDebut').value = hour ? (String(hour).padStart(2, '0') + ':00') : '08:00';
+        document.getElementById('mFin').value = hour ? (String(hour + 2).padStart(2, '0') + ':00') : '10:00';
+        document.getElementById('mFormateur').value = cours && cours.formateur ? cours.formateur : '';
+        document.getElementById('mSalle').innerHTML = '<option value="">Chargement...</option>';
+        document.getElementById('btnDelete').classList.toggle('d-none', !id);
+        document.getElementById('alertConflict').classList.add('d-none');
+        
+        new bootstrap.Modal(document.getElementById('seanceModal')).show();
+        
+        // Charger les salles disponibles après affichage du modal
+        setTimeout(function() {
+            loadSallesDisponibles();
+        }, 100);
+    }
+    
+    function openModalEdit(s) {
+        currentSeanceId = s.id;
+        currentCoursId = s.coursId;
+        currentSalleId = s.salleId || null;
+        
+        document.getElementById('modalTitle').textContent = 'Modifier la séance';
+        document.getElementById('seanceId').value = s.id;
+        document.getElementById('coursId').value = s.coursId;
+        document.getElementById('coursDisplay').value = s.coursCode + ' - ' + (s.coursNom || '');
+        document.getElementById('mDate').value = s.date;
+        document.getElementById('mDebut').value = String(s.heureDebut).padStart(2, '0') + ':00';
+        document.getElementById('mFin').value = String(s.heureFin).padStart(2, '0') + ':00';
+        document.getElementById('mFormateur').value = s.formateurId || '';
+        document.getElementById('mSalle').innerHTML = '<option value="">Chargement...</option>';
+        document.getElementById('btnDelete').classList.remove('d-none');
+        document.getElementById('alertConflict').classList.add('d-none');
+        
+        new bootstrap.Modal(document.getElementById('seanceModal')).show();
+        
+        // Charger les salles disponibles après affichage du modal
+        setTimeout(function() {
+            loadSallesDisponibles();
+        }, 100);
+    }
+    
+    // Fonctions globales pour les boutons
+    window.saveSeance = function() {
+        var salleValue = document.getElementById('mSalle').value;
+        var data = {
+            coursId: document.getElementById('coursId').value,
+            groupeId: groupeId,
+            date: document.getElementById('mDate').value,
+            heureDebut: document.getElementById('mDebut').value,
+            heureFin: document.getElementById('mFin').value,
+            formateurId: document.getElementById('mFormateur').value,
+            salleId: salleValue ? parseInt(salleValue) : null
+        };
+        
+        if (!data.coursId || !data.date || !data.heureDebut || !data.heureFin) {
+            alert('Veuillez remplir tous les champs obligatoires');
+            return;
+        }
+        
+        var url = currentSeanceId 
+            ? '/admin/seances/api/update/' + currentSeanceId 
+            : '/admin/seances/api/create';
+        
+        var headers = { 'Content-Type': 'application/json' };
+        headers[csrfHeader] = csrfToken;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(data)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(result) {
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('seanceModal')).hide();
+                location.reload();
+            } else {
+                document.getElementById('alertConflict').classList.remove('d-none');
+                document.getElementById('conflictMsg').textContent = result.message;
+            }
+        })
+        .catch(function(e) {
+            console.error('Save error:', e);
+            alert('Erreur lors de l\'enregistrement');
+        });
+    };
+    
+    window.deleteSeance = function() {
+        if (!currentSeanceId || !confirm('Supprimer cette séance ?')) return;
+        
+        var headers = {};
+        headers[csrfHeader] = csrfToken;
+        
+        fetch('/admin/seances/api/' + currentSeanceId, {
+            method: 'DELETE',
+            headers: headers
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(result) {
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('seanceModal')).hide();
+                location.reload();
+            } else {
+                alert(result.message);
+            }
+        })
+        .catch(function(e) {
+            console.error('Delete error:', e);
+            alert('Erreur lors de la suppression');
+        });
+    };
+})();
+</script>
+</th:block>
+</body>
+</html>

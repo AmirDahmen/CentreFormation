@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
     <title layout:title-pattern="$CONTENT_TITLE - $LAYOUT_TITLE">Centre de Formation</title>
     
     <!-- Google Fonts -->
@@ -642,6 +644,16 @@
                 <li>
                     <a class="nav-link" th:href="@{/admin/sessions}" th:classappend="${activePage == 'sessions'} ? 'active' : ''">
                         <i class="bi bi-calendar-event-fill"></i> Sessions
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/admin/seances}" th:classappend="${activePage == 'seances'} ? 'active' : ''">
+                        <i class="bi bi-calendar3"></i> Planification
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" th:href="@{/admin/salles}" th:classappend="${activePage == 'salles'} ? 'active' : ''">
+                        <i class="bi bi-building"></i> Salles
                     </a>
                 </li>
             </ul>

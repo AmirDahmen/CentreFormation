@@ -6,10 +6,14 @@ import com.centreformation.entity.Utilisateur;
 import com.centreformation.entity.Cours;
 import com.centreformation.entity.Inscription;
 import com.centreformation.entity.Groupe;
+import com.centreformation.entity.SeanceCours;
+import com.centreformation.entity.Note;
 import com.centreformation.repository.EtudiantRepository;
 import com.centreformation.repository.FormateurRepository;
 import com.centreformation.repository.UtilisateurRepository;
 import com.centreformation.repository.InscriptionRepository;
+import com.centreformation.repository.SeanceCoursRepository;
+import com.centreformation.repository.NoteRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -22,9 +26,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -44,6 +51,8 @@ public class ProfileApiController {
     private final EtudiantRepository etudiantRepository;
     private final FormateurRepository formateurRepository;
     private final InscriptionRepository inscriptionRepository;
+    private final SeanceCoursRepository seanceCoursRepository;
+    private final NoteRepository noteRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -113,6 +122,15 @@ public class ProfileApiController {
                     inscriptionMap.put("dateInscription", inscription.getDateInscription());
                     inscriptionMap.put("statut", inscription.getStatut() != null ? inscription.getStatut().name() : "EN_ATTENTE");
                     
+                    // Ajouter le groupe si l'inscription est validée
+                    if (inscription.getGroupe() != null) {
+                        Map<String, Object> groupeMap = new HashMap<>();
+                        groupeMap.put("id", inscription.getGroupe().getId());
+                        groupeMap.put("nom", inscription.getGroupe().getNom());
+                        groupeMap.put("code", inscription.getGroupe().getCode());
+                        inscriptionMap.put("groupe", groupeMap);
+                    }
+                    
                     if (inscription.getCours() != null) {
                         Cours cours = inscription.getCours();
                         Map<String, Object> coursMap = new HashMap<>();
@@ -131,24 +149,127 @@ public class ProfileApiController {
                 .collect(Collectors.toList());
             profile.put("inscriptions", inscriptionsData);
             
+            // Ajouter les notes de l'étudiant (toutes les notes qui ont une valeur)
+            List<Note> notesEtudiant = noteRepository.findByEtudiant(etudiant);
+            List<Map<String, Object>> notesData = notesEtudiant.stream()
+                .filter(note -> note.getValeur() != null)
+                .map(note -> {
+                    Map<String, Object> noteMap = new HashMap<>();
+                    noteMap.put("id", note.getId());
+                    noteMap.put("valeur", note.getValeur());
+                    noteMap.put("commentaire", note.getCommentaire());
+                    noteMap.put("dateSaisie", note.getDateSaisie());
+                    if (note.getCours() != null) {
+                        noteMap.put("coursId", note.getCours().getId());
+                        noteMap.put("coursCode", note.getCours().getCode());
+                        noteMap.put("coursTitre", note.getCours().getTitre());
+                        if (note.getCours().getFormateur() != null) {
+                            noteMap.put("formateur", note.getCours().getFormateur().getPrenom() + " " + 
+                                       note.getCours().getFormateur().getNom());
+                        }
+                    }
+                    return noteMap;
+                })
+                .collect(Collectors.toList());
+            profile.put("notes", notesData);
+            
+            // Calculer la moyenne
+            if (!notesData.isEmpty()) {
+                double somme = notesData.stream()
+                    .mapToDouble(n -> ((Number) n.get("valeur")).doubleValue())
+                    .sum();
+                profile.put("moyenne", Math.round((somme / notesData.size()) * 100.0) / 100.0);
+            }
+            
             // Ajouter les cours via les groupes de l'étudiant
             List<Map<String, Object>> coursViaGroupes = new java.util.ArrayList<>();
+            Set<Long> seenCoursIds = new HashSet<>();
             for (Groupe groupe : etudiant.getGroupes()) {
-                for (Cours cours : groupe.getCours()) {
-                    Map<String, Object> coursMap = new HashMap<>();
-                    coursMap.put("id", cours.getId());
-                    coursMap.put("code", cours.getCode());
-                    coursMap.put("titre", cours.getTitre());
-                    coursMap.put("description", cours.getDescription());
-                    coursMap.put("duree", cours.getNombreHeures());
-                    coursMap.put("groupe", groupe.getNom());
-                    if (cours.getFormateur() != null) {
-                        coursMap.put("formateur", cours.getFormateur().getPrenom() + " " + cours.getFormateur().getNom());
-                    }
-                    coursViaGroupes.add(coursMap);
+                // NOUVEAU: un groupe appartient à UN seul cours
+                Cours cours = groupe.getCours();
+                if (cours == null) continue;
+                
+                // Éviter les doublons si l'étudiant est dans plusieurs groupes du même cours
+                if (seenCoursIds.contains(cours.getId())) continue;
+                seenCoursIds.add(cours.getId());
+                
+                Map<String, Object> coursMap = new HashMap<>();
+                coursMap.put("id", cours.getId());
+                coursMap.put("code", cours.getCode());
+                coursMap.put("titre", cours.getTitre());
+                coursMap.put("description", cours.getDescription());
+                coursMap.put("duree", cours.getNombreHeures());
+                coursMap.put("groupe", groupe.getNom());
+                if (cours.getFormateur() != null) {
+                    coursMap.put("formateur", cours.getFormateur().getPrenom() + " " + cours.getFormateur().getNom());
                 }
+                coursViaGroupes.add(coursMap);
             }
             profile.put("coursViaGroupes", coursViaGroupes);
+            
+            // Ajouter l'emploi du temps de l'étudiant (séances des inscriptions VALIDÉES uniquement)
+            List<Map<String, Object>> emploiDuTemps = new java.util.ArrayList<>();
+            LocalDate today = LocalDate.now();
+            LocalDate endDate = today.plusMonths(2); // 2 mois à venir
+            Set<Long> seenSeanceIds = new HashSet<>();
+            
+            // Parcourir les inscriptions VALIDÉES de l'étudiant
+            for (Inscription inscription : inscriptions) {
+                // Ne prendre que les inscriptions VALIDÉES avec un groupe assigné
+                if (inscription.getStatut() != Inscription.StatutInscription.VALIDEE || inscription.getGroupe() == null) {
+                    continue;
+                }
+                
+                Groupe groupe = inscription.getGroupe();
+                Cours coursInscription = inscription.getCours();
+                List<SeanceCours> seances = seanceCoursRepository.findByGroupe(groupe);
+                
+                for (SeanceCours seance : seances) {
+                    // Éviter les doublons
+                    if (seenSeanceIds.contains(seance.getId())) continue;
+                    
+                    // Ne prendre que les séances du cours pour lequel l'étudiant est inscrit
+                    if (coursInscription != null && seance.getCours() != null 
+                        && !seance.getCours().getId().equals(coursInscription.getId())) {
+                        continue;
+                    }
+                    
+                    seenSeanceIds.add(seance.getId());
+                    
+                    // Inclure les séances passées (1 mois) et futures (2 mois)
+                    if (seance.getDate().isAfter(today.minusMonths(1)) && seance.getDate().isBefore(endDate)) {
+                        Map<String, Object> seanceMap = new HashMap<>();
+                        seanceMap.put("id", seance.getId());
+                        seanceMap.put("date", seance.getDate().toString());
+                        seanceMap.put("heureDebut", seance.getHeureDebut().toString());
+                        seanceMap.put("heureFin", seance.getHeureFin().toString());
+                        seanceMap.put("contenu", seance.getContenu());
+                        seanceMap.put("groupe", groupe.getNom());
+                        
+                        if (seance.getCours() != null) {
+                            seanceMap.put("coursId", seance.getCours().getId());
+                            seanceMap.put("coursTitre", seance.getCours().getTitre());
+                            seanceMap.put("coursCode", seance.getCours().getCode());
+                        }
+                        if (seance.getFormateur() != null) {
+                            seanceMap.put("formateur", seance.getFormateur().getPrenom() + " " + seance.getFormateur().getNom());
+                        }
+                        if (seance.getSalle() != null) {
+                            seanceMap.put("salle", seance.getSalle().getNom());
+                        } else if (seance.getSalleTexte() != null) {
+                            seanceMap.put("salle", seance.getSalleTexte());
+                        }
+                        emploiDuTemps.add(seanceMap);
+                    }
+                }
+            }
+            // Trier par date et heure
+            emploiDuTemps.sort((a, b) -> {
+                int dateCompare = ((String) a.get("date")).compareTo((String) b.get("date"));
+                if (dateCompare != 0) return dateCompare;
+                return ((String) a.get("heureDebut")).compareTo((String) b.get("heureDebut"));
+            });
+            profile.put("emploiDuTemps", emploiDuTemps);
             
         } else if (hasRoleFormateur) {
             Formateur formateur = utilisateur.getFormateurLie();
@@ -181,10 +302,53 @@ public class ProfileApiController {
                         coursMap.put("titre", cours.getTitre());
                         coursMap.put("description", cours.getDescription());
                         coursMap.put("duree", cours.getNombreHeures());
+                        // Ajouter les groupes associés à ce cours
+                        List<String> groupesNoms = cours.getGroupes().stream()
+                            .map(Groupe::getNom)
+                            .collect(Collectors.toList());
+                        coursMap.put("groupes", groupesNoms);
                         return coursMap;
                     })
                     .collect(Collectors.toList());
                 profile.put("coursDispenses", coursDispenses);
+                
+                // Ajouter l'emploi du temps du formateur (ses séances)
+                List<SeanceCours> seances = seanceCoursRepository.findByFormateur(formateur);
+                LocalDate today = LocalDate.now();
+                LocalDate endDate = today.plusMonths(2);
+                
+                List<Map<String, Object>> emploiDuTemps = seances.stream()
+                    .filter(s -> s.getDate().isAfter(today.minusMonths(1)) && s.getDate().isBefore(endDate))
+                    .sorted((a, b) -> {
+                        int dateCompare = a.getDate().compareTo(b.getDate());
+                        if (dateCompare != 0) return dateCompare;
+                        return a.getHeureDebut().compareTo(b.getHeureDebut());
+                    })
+                    .map(seance -> {
+                        Map<String, Object> seanceMap = new HashMap<>();
+                        seanceMap.put("id", seance.getId());
+                        seanceMap.put("date", seance.getDate().toString());
+                        seanceMap.put("heureDebut", seance.getHeureDebut().toString());
+                        seanceMap.put("heureFin", seance.getHeureFin().toString());
+                        seanceMap.put("contenu", seance.getContenu());
+                        
+                        if (seance.getCours() != null) {
+                            seanceMap.put("coursId", seance.getCours().getId());
+                            seanceMap.put("coursTitre", seance.getCours().getTitre());
+                            seanceMap.put("coursCode", seance.getCours().getCode());
+                        }
+                        if (seance.getGroupe() != null) {
+                            seanceMap.put("groupe", seance.getGroupe().getNom());
+                        }
+                        if (seance.getSalle() != null) {
+                            seanceMap.put("salle", seance.getSalle().getNom());
+                        } else if (seance.getSalleTexte() != null) {
+                            seanceMap.put("salle", seance.getSalleTexte());
+                        }
+                        return seanceMap;
+                    })
+                    .collect(Collectors.toList());
+                profile.put("emploiDuTemps", emploiDuTemps);
             } else {
                 profile.put("type", userType);
             }

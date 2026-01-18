@@ -33,8 +33,15 @@ public class SeanceCours {
     @Column(name = "heure_fin", nullable = false)
     private LocalTime heureFin;
 
-    @Column(length = 100)
-    private String salle;
+    // Relation avec l'entité Salle (optionnelle pour compatibilité)
+    @ManyToOne
+    @JoinColumn(name = "salle_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Salle salle;
+    
+    // Ancien champ texte pour compatibilité (sera migré)
+    @Column(name = "salle_texte", length = 100)
+    private String salleTexte;
 
     @Column(columnDefinition = "TEXT")
     private String contenu;

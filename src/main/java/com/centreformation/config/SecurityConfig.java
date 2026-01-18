@@ -90,7 +90,7 @@ public class SecurityConfig {
             .securityMatcher("/**")
             .authorizeHttpRequests(auth -> auth
                 // Ressources publiques
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                 .requestMatchers("/login", "/register", "/error", "/error/**").permitAll()
                 
                 // Accès admin uniquement
